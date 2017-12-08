@@ -6,96 +6,64 @@
 #include "Board.h"
 #include "Dynamixel_control.h"
 
-TIM_Init_Typedef timSettings;
-USART_Init_Typedef usartSettings;
-GPIO_Init_TypeDef pD12Settings;
-GPIO_Init_TypeDef pA2Settings;
-
 uint8_t buf;
 uint8_t i = 0;
-uint8_t flagFound = 0;
 
-uint32_t j = 0;
-uint32_t max = 1680000;
 
-void USART1_IRQHandler ()
-{
-	if (READ_BIT(USART1->SR, USART_SR_RXNE))
-	{
-		CLEAR_BIT(USART1->SR, USART_SR_RXNE);
-
-		buf = USART1->DR;
-		
-		usartPutStr(USART1, "byte: ");
-		usartPutC(USART1, buf);
-		usartPutStr(USART1, " ");
-		usartPutStr(USART1,"\n");
-//		
-//	UART4->CR1 &= ~ USART_CR1_RXNEIE;
-//	usartPutC(UART4, buf);
-//	UART4->CR1 |= USART_CR1_RXNEIE;
-		
-		gpioPinChangeLevel(DEBUG_LED_PORT, DEBUG_LED_GREEN_PIN);
-	}
-}
-
-void USART2_IRQHandler ()
-{
-	if (READ_BIT(USART2->SR, USART_SR_RXNE))
-	{
-		CLEAR_BIT(USART2->SR, USART_SR_RXNE);
-	}
-}
-
-//void UART4_IRQHandler ()
+//void USART2_IRQHandler ()
 //{
-//	if (READ_BIT(UART4->SR, USART_SR_RXNE))
+//	if (READ_BIT(USART2->SR, USART_SR_RXNE))
 //	{
-//		CLEAR_BIT(UART4->SR, USART_SR_RXNE);
-//		buf = UART4->DR;
-//		
-//		usartPutStr(USART1, "answer: ");
-//		usartPutC(USART1, buf);
-//		
-//		gpioPinChangeLevel(DEBUG_LED_PORT, DEBUG_LED_BLUE_PIN);
+//		CLEAR_BIT(USART2->SR, USART_SR_RXNE);
 //	}
 //}
-void delay()
-{
-	for (j = 0; j < max; j++);
-	j=0;
-}
-void pwmInitialization()
-{
-	float dutyCycle[4] = {0.2, 0, 0, 0};
-	int channels[4] = {1, 0, 0, 0};
-	float duty1 = 0.5;
-	float duty2 = 0.7;
-	
-	timSettings.TIM_Dir = TIM_DIR_UPCOUNTER;
-	timSettings.TIM_Prescaler = (uint16_t)1600; // 10000 Hz
-	timSettings.TIM_Period = 200; // 50 Hz
-	
-	
-	timInitPwm(TIM4, &timSettings, &dutyCycle[0], &channels[0]);
-	timEnable(TIM4);
-	timPwmChangeDutyCycle(TIM4, duty1, TIM_PWM_CHANNEL_1);
-	timPwmChangeDutyCycle(TIM4, duty2, TIM_PWM_CHANNEL_1);
-}
-void timEncoder()
-{
-	// Pins's settings
-	gpioInitPinAf(GPIOA, GPIO_Pin_0, GPIO_AF_TIM5);
-	gpioInitPinAf(GPIOA, GPIO_Pin_1, GPIO_AF_TIM5);
-	
-	// PA0 and PA1 (channel 1 and channel 2)
-	timInitEncoder(TIM5);
-}
+
+////void UART4_IRQHandler ()
+////{
+////	if (READ_BIT(UART4->SR, USART_SR_RXNE))
+////	{
+////		CLEAR_BIT(UART4->SR, USART_SR_RXNE);
+////		buf = UART4->DR;
+////		
+////		usartPutStr(USART1, "answer: ");
+////		usartPutC(USART1, buf);
+////		
+////		gpioPinChangeLevel(DEBUG_LED_PORT, DEBUG_LED_BLUE_PIN);
+////	}
+////}
+//void delay()
+//{
+//	for (j = 0; j < max; j++);
+//	j=0;
+//}
+//void pwmInitialization()
+//{
+//	float dutyCycle[4] = {0.2, 0, 0, 0};
+//	int channels[4] = {1, 0, 0, 0};
+//	float duty1 = 0.5;
+//	float duty2 = 0.7;
+//	
+//	timSettings.TIM_Dir = TIM_DIR_UPCOUNTER;
+//	timSettings.TIM_Prescaler = (uint16_t)1600; // 10000 Hz
+//	timSettings.TIM_Period = 200; // 50 Hz
+//	
+//	
+//	timInitPwm(TIM4, &timSettings, &dutyCycle[0], &channels[0]);
+//	timEnable(TIM4);
+//	timPwmChangeDutyCycle(TIM4, duty1, TIM_PWM_CHANNEL_1);
+//	timPwmChangeDutyCycle(TIM4, duty2, TIM_PWM_CHANNEL_1);
+//}
+//void timEncoder()
+//{
+//	// Pins's settings
+//	gpioInitPinAf(GPIOA, GPIO_Pin_0, GPIO_AF_TIM5);
+//	gpioInitPinAf(GPIOA, GPIO_Pin_1, GPIO_AF_TIM5);
+//	
+//	// PA0 and PA1 (channel 1 and channel 2)
+//	timInitEncoder(TIM5);
+//}
 int main()
 {
-
-
-
 	boardInitAll();
 
 	//timerInitialization();
@@ -121,7 +89,6 @@ int main()
 		}
 		else if (buf == 0x02)
 		{
-			usartPutC(USART2, 0xFA);
 			buf = 0x00;
 		}
 		else if (buf == 0x03)
