@@ -37,7 +37,7 @@ void timSetOnePulseMode(TIM_TypeDef* TIMx);
 //-------------------------------------- PWM mode --------------------------------------//
 
 // PWM 1 mode initialization (duty cycles is stored in dutyCycle[i], selected  channels is stored in channels[i], i = 0..3)
-void timInitPwm(TIM_TypeDef* TIMx, TIM_Init_Typedef* TIM_Init, float* dutyCycle, int* channels);
+void timInitPwm(TIM_TypeDef* TIMx, TIM_Init_Typedef* TIM_Init, float dutyCycle[4], uint8_t channels[4]);
 
 // Change PWM duty cycle "on fly"
 void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, float dutyCycle, int channel);
@@ -48,6 +48,9 @@ void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, float dutyCycle, int channel);
 void timInitEncoder(TIM_TypeDef* TIMx);
 
 //------------------------- Common functions for different modes -----------------------//
+
+// Get default struct for initialization
+TIM_Init_Typedef timGetInitStruct(void);
 
 // Initialization of clocking
 void timInitClock(TIM_TypeDef* TIMx);
