@@ -1,29 +1,114 @@
 #ifndef STM32F4_BOARD
 #define STM32F4_BOARD
 
-#define DYNAMIXEL_USART_MODULE          UART4
-#define DYNAMIXEL_USART_IRQN            UART4_IRQn
-#define DYNAMIXEL_USART_BAUDRATE        1000000
-#define DYNAMIXEL_USART_PIN_AF          GPIO_AF_UART4
-#define DYNAMIXEL_USART_TX_PIN_PORT     GPIOC
-#define DYNAMIXEL_USART_TX_PIN_NUMBER   GPIO_Pin_10
-#define DYNAMIXEL_USART_RX_PIN_PORT     GPIOC
-#define DYNAMIXEL_USART_RX_PIN_NUMBEК   GPIO_Pin_11
+#include "STM32F4_GPIO.h"
+#include "STM32F4_TIM.h"
+#include "STM32F4_UART.h"
+#include "STM32F4_RCC.h"
+#include "Dynamixel_control.h"
 
-#define DEBUG_USART_MODULE              USART1
-#define DEBUG_USART_IRQN                USART1_IRQn
-#define DEBUG_USART_BAUDRATE            9600
-#define DEBUG_USART_PIN_AF              GPIO_AF_USART1
-#define DEBUG_USART_TX_PIN_PORT         GPIOB
-#define DEBUG_USART_TX_PIN_NUMBER       GPIO_Pin_6
-#define DEBUG_USART_RX_PIN_PORT         GPIOB
-#define DEBUG_USART_RX_PIN_NUMBER       GPIO_Pin_7
+//--------------------------------------------- USART modules ------------------------------------------------//
 
-#define DEBUG_LED_PORT                  GPIOD
-#define DEBUG_LED_GREEN_PIN	            GPIO_Pin_12
-#define DEBUG_LED_ORANGE_PIN            GPIO_Pin_13
-#define DEBUG_LED_RED_PIN               GPIO_Pin_14
-#define DEBUG_LED_BLUE_PIN              GPIO_Pin_15
+#define DYNAMIXEL_USART_MODULE           UART4
+#define DYNAMIXEL_USART_IRQN             UART4_IRQn
+#define DYNAMIXEL_USART_BAUDRATE         1000000
+#define DYNAMIXEL_USART_PIN_AF           GPIO_AF_UART4
+#define DYNAMIXEL_USART_TX_PIN_PORT      GPIOC
+#define DYNAMIXEL_USART_TX_PIN_NUMBER    GPIO_Pin_10
+#define DYNAMIXEL_USART_RX_PIN_PORT      GPIOC
+#define DYNAMIXEL_USART_RX_PIN_NUMBER    GPIO_Pin_11
+
+#define DEBUG_USART_MODULE               USART1
+#define DEBUG_USART_IRQN                 USART1_IRQn
+#define DEBUG_USART_BAUDRATE             9600
+#define DEBUG_USART_PIN_AF               GPIO_AF_USART1
+#define DEBUG_USART_TX_PIN_PORT          GPIOB
+#define DEBUG_USART_TX_PIN_NUMBER        GPIO_Pin_6
+#define DEBUG_USART_RX_PIN_PORT          GPIOB
+#define DEBUG_USART_RX_PIN_NUMBER        GPIO_Pin_7
+
+#define COM_USART_MODULE                 USART1
+#define COM_USART_IRQN                   USART1_IRQn
+#define COM_USART_BAUDRATE               115200
+#define COM_USART_PIN_AF                 GPIO_AF_USART1
+#define COM_USART_TX_PIN_PORT            GPIOB
+#define COM_USART_TX_PIN_NUMBER          GPIO_Pin_6
+#define COM_USART_RX_PIN_PORT            GPIOB
+#define COM_USART_RX_PIN_NUMBER          GPIO_Pin_7
+
+//--------------------------------------------- LEDs for debug -----------------------------------------------//
+
+//#define DEBUG_LED_PORT                   GPIOD
+//#define DEBUG_LED_GREEN_PIN              GPIO_Pin_12
+//#define DEBUG_LED_ORANGE_PIN             GPIO_Pin_13
+//#define DEBUG_LED_RED_PIN                GPIO_Pin_14
+//#define DEBUG_LED_BLUE_PIN               GPIO_Pin_15
+
+//--------------------------------------------- Encoders -----------------------------------------------------//
+
+#define ENCODER_1_TIM_MODULE             TIM8
+#define ENCODER_1_CHA_PORT               GPIOC
+#define ENCODER_1_CHA_PIN                GPIO_Pin_7
+#define ENCODER_1_CHB_PORT               GPIOC
+#define ENCODER_1_CHB_PIN                GPIO_Pin_6
+#define ENCODER_1_PIN_AF                 GPIO_AF_TIM8
+#define ENCODER_1_CNT                    (ENCODER_1_TIM_MODULE->CNT)
+
+#define ENCODER_2_TIM_MODULE             TIM1
+#define ENCODER_2_CHA_PORT               GPIOE
+#define ENCODER_2_CHA_PIN                GPIO_Pin_11
+#define ENCODER_2_CHB_PORT               GPIOE
+#define ENCODER_2_CHB_PIN                GPIO_Pin_9
+#define ENCODER_2_PIN_AF                 GPIO_AF_TIM1
+#define ENCODER_2_CNT                    (ENCODER_2_TIM_MODULE->CNT)
+
+#define ENCODER_3_TIM_MODULE             TIM3
+#define ENCODER_3_CHA_PORT               GPIOA
+#define ENCODER_3_CHA_PIN                GPIO_Pin_6
+#define ENCODER_3_CHB_PORT               GPIOA
+#define ENCODER_3_CHB_PIN                GPIO_Pin_7
+#define ENCODER_3_PIN_AF                 GPIO_AF_TIM3
+#define ENCODER_3_CNT                    (ENCODER_3_TIM_MODULE->CNT)
+
+#define ENCODER_4_TIM_MODULE             TIM2
+#define ENCODER_4_CHA_PORT               GPIOB
+#define ENCODER_4_CHA_PIN                GPIO_Pin_3
+#define ENCODER_4_CHB_PORT               GPIOA
+#define ENCODER_4_CHB_PIN                GPIO_Pin_15
+#define ENCODER_4_PIN_AF                 GPIO_AF_TIM2
+#define ENCODER_4_CNT                    (ENCODER_4_TIM_MODULE->CNT)
+
+//--------------------------------------------- Motor control (PWM) ------------------------------------------------//
+// ARR = 42000, PSC = 2,fapb1 = 42 MHZ, PWM frequency = 1000 Hz
+#define MOTOR_TIM_MODULE                 TIM4
+#define MOTOR_TIM_PSC                    0x02
+#define MOTOR_TIM_ARR                    0xA410
+#define MOTOR_PWM_PIN_AF                 GPIO_AF_TIM4
+
+#define MOTOR_CH_PWM_PORT                GPIOD
+#define MOTOR_CH1_PWM_PIN                GPIO_Pin_12
+#define MOTOR_CH2_PWM_PIN                GPIO_Pin_13
+#define MOTOR_CH3_PWM_PIN                GPIO_Pin_14
+#define MOTOR_CH4_PWM_PIN                GPIO_Pin_15
+
+#define MOTOR_CH1_DIR_PORT               GPIOC
+#define MOTOR_CH1_DIR_PIN                GPIO_Pin_14
+#define MOTOR_CH2_DIR_PORT               GPIOC
+#define MOTOR_CH2_DIR_PIN                GPIO_Pin_15
+#define MOTOR_CH3_DIR_PORT               GPIOE
+#define MOTOR_CH3_DIR_PIN                GPIO_Pin_10
+#define MOTOR_CH4_DIR_PORT               GPIOE
+#define MOTOR_CH4_DIR_PIN                GPIO_Pin_14
+
+#define MOTOR_CH1_EN_PORT                GPIOC
+#define MOTOR_CH1_EN_PIN                 GPIO_Pin_14
+#define MOTOR_CH2_EN_PORT                GPIOC
+#define MOTOR_CH2_EN_PIN                 GPIO_Pin_15
+#define MOTOR_CH3_EN_PORT                GPIOE
+#define MOTOR_CH3_EN_PIN                 GPIO_Pin_10
+#define MOTOR_CH4_EN_PORT                GPIOE
+#define MOTOR_CH4_EN_PIN                 GPIO_Pin_14
+
 
 // Initialize all necessary peripheral devices
 void boardInitAll(void);
