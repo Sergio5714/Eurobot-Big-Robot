@@ -1,19 +1,43 @@
 
-#ifndef _COMMUNICATION_
-#define _COMMUNICATION_
+#ifndef STM32F4_COMMUNICATION
+#define STM32F4_COMMUNICATION
 
-#include "robot.h"
-#include "usbd_conf.h"
+#include "stm32f4xx.h"
+#include "Board.h"
+#include "Commands.h"
 
-//структура данных робота
+// Buffer settings
+#define COM_REC_BUFFER_LEN     200
 
-char param[30] ;                      //буфер параметров входящих команд
-char inData[64];                      //Входной буфер данных
-char outData[30];                     //Выходной буфер данных
-char dataIndex;                       //счетчик количества байт во входящем пакете
+// Protocol settings
+#define COM_SYNC_BYTE          0xFA
+#define COM_ROBOT_ADR_BYTE     0xAF
+#define COM_RASPB_ADR_BYTE     0xFA
 
+// Header + adress + length + command + 1 parameter + checksum 
+#define COM_MIN_PACKAGE_LEN    5
+// Maximum number of parameters = 30
+#define COM_MAX_PARAM_SIZE     0x1E
 
-void pushByte(char inByte);
-char sendAnswer(char cmd, char * param, int paramSize);
+// Struct for  command
+typedef struct 
+{
+	uint8_t command ;
+	uint8_t params[COM_MAX_PARAM_SIZE];
+	uint8_t numberOfreceivedParams;
+	uint8_t status;
+} Command_Struct;
+
+// Get number of available bytes in buffer
+uint32_t getBytesAvailable(uint8_t* receiveBufferStart, uint8_t* receiveBufferEnd);
+
+// Increment pointer of buffer
+uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos);
+
+// Check if there is a package in buffer
+ErrorStatus getPackage(void);
+
+// Send answer in specified form
+void sendAnswer(uint8_t command, uint8_t* params, uint8_t numberOfParams);
 
 #endif

@@ -1,90 +1,147 @@
-/*
-
-Upper level functions for communication with Odroid board.
-
-*/
-
 #include "Communication.h"
-#include "stdint.h"
-#include "robot.h"
-InPackStruct inCommand ={0xFA, 0xAF, 0x00, 0x00, &param[0]}; //структура входящего пакета
-void pushByte(char inByte) // поиск, формирование и проверка входящего пакета в потоке данных
-{
-  char j;
-  uint16_t checkSum;
-  uint16_t * test;
-  inData[dataIndex++] = inByte;
+// Internal FIFO buffer
+uint8_t comReceiveBuffer[COM_REC_BUFFER_LEN];
+uint8_t* comReceiveBufferStart = comReceiveBuffer;
+uint8_t* comReceiveBufferEnd = comReceiveBuffer;
+uint8_t comBufLength = COM_REC_BUFFER_LEN;
 
-  if((inData[0] == SYNC_BYTE) && (inData[1] == ADR_BYTE))  //поиск заголовка
-  {
-    if( (dataIndex >= inData[2]) && (dataIndex > 3) ) //проверка длинны пакета
-    {
-      checkSum = packetCheck(&inData[0], inData[2] - CHECK_SIZE);
-      test = ( uint16_t *) &inData[inData[2] - CHECK_SIZE];
-      if (*test == checkSum) // проверка CRC
-      {
-        inCommand.packLen = inData[2];
-        for (j=0; j < inCommand.packLen - CHECK_SIZE - HEADER_SIZE; j++)  //Копирование параметров
-                      *(inCommand.param + j) = inData[4 + j];
-        inCommand.command = inData[3];
-        execCommand(&inCommand);     //выполнение команды
-      }
-      dataIndex = 0;
-      inData[0] = 0;
-      inData[1] = 0;
-    }
-  }
-  else
-  {
-    if (dataIndex > 1)
-    {
-      inData[0] = inData[1];
-      inData[1] = 0;
-      dataIndex = 1;
-    }
-  }
+// For debug, shows number of bytes available
+uint8_t size;
+
+// Structure for input command
+Command_Struct inputCommand;
+
+uint32_t getBytesAvailable(uint8_t* receiveBufferStart, uint8_t* receiveBufferEnd)
+{
+	uint8_t* start = (uint8_t*) receiveBufferStart;
+	uint8_t* end = receiveBufferEnd;
+
+	if (end >= start)
+		return (end - start);
+	else
+		return (comBufLength - (start - end));
+}
+// Check if there is a package in buffer
+ErrorStatus getPackage()
+{
+	uint8_t i;
+	uint8_t* ptr = comReceiveBufferStart;
+	uint8_t* tempPtr;
+	uint8_t* packagelengthPtr;
+	uint8_t checksum = (uint8_t)(COM_SYNC_BYTE + COM_ROBOT_ADR_BYTE);
+	// Check if minimum number of bytes is available
+	while (getBytesAvailable(ptr, comReceiveBufferEnd) >= COM_MIN_PACKAGE_LEN)
+	{
+		// Check sync bit and adress bit
+		if ((*ptr == COM_SYNC_BYTE) && (*(incrementPtr(ptr, 0x01)) == COM_ROBOT_ADR_BYTE))
+		{
+			packagelengthPtr = incrementPtr(ptr, 0x02);
+			if (*packagelengthPtr < COM_MIN_PACKAGE_LEN)
+			{
+				// Too small length
+				packagelengthPtr = incrementPtr(ptr, 0x01);
+				comReceiveBufferStart = packagelengthPtr;
+				return ERROR;
+			}
+			if (*packagelengthPtr <= getBytesAvailable(ptr, comReceiveBufferEnd))
+			{
+				// grab length of package
+				checksum += *packagelengthPtr;
+				// Increment pointer
+				tempPtr = incrementPtr(packagelengthPtr, 0x01);
+				// grab command
+				inputCommand.command = *tempPtr;
+				checksum += *tempPtr;
+				// Increment pointer
+				tempPtr = incrementPtr(tempPtr, 0x01);
+				// grab parameters if any
+				inputCommand.numberOfreceivedParams = 0;
+				for (i = 0x00; i < *packagelengthPtr - 0x05; i++)
+				{
+					inputCommand.params[i] = *tempPtr;
+					checksum += *tempPtr;
+					inputCommand.numberOfreceivedParams++;
+					// Increment pointer
+					tempPtr = incrementPtr(tempPtr, 0x01);
+				}
+				// Check checksum value
+				if (*tempPtr == checksum)
+				{
+					// Checksum is OK 
+					// Command status - need to be executed (0x01)
+					inputCommand.status = 0x01;
+					// Increment pointer
+					tempPtr = incrementPtr(tempPtr, 0x01);
+					comReceiveBufferStart = tempPtr;
+					return SUCCESS;
+				}
+				else
+				{
+					// Wrong checksum
+					tempPtr = incrementPtr(tempPtr, 0x01);
+					// Command status - does not need to be executed (0x00)
+					inputCommand.status = 0x00;
+					comReceiveBufferStart = tempPtr;
+					return ERROR;
+				}
+					
+			}
+			else
+			{
+				// Not all bytes have been received
+				return ERROR;
+			}
+		}
+		ptr = incrementPtr(ptr, 0x01);
+	}
+	comReceiveBufferStart = ptr;
+	return ERROR;
 }
 
-extern uint8_t  APP_Rx_Buffer []; /* Write CDC received data in this buffer.
-                                     These data will be sent over USB IN endpoint
-                                     in the CDC core functions. */
-extern uint32_t APP_Rx_ptr_in;    /* Increment this pointer or roll it back to
-                                     start address when writing received data
-                                     in the buffer APP_Rx_Buffer. */
-
-char sendAnswer(char cmd, char * param, int paramSize) // отправить ответ по USB
+// Increment pointer of buffer
+uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos)
 {
-         //    __disable_irq();
-         outData[0] = 0xFA;
-         outData[1] = 0xFA;
-         outData[2] = paramSize + HEADER_SIZE + CHECK_SIZE;
-         outData[3] = cmd;
-         memcpy(&outData[4], param, paramSize);
-
-         *((int16_t*)&outData[paramSize + HEADER_SIZE]) = (int16_t) packetCheck(&outData[0], paramSize + HEADER_SIZE);
-         int _size = paramSize + HEADER_SIZE + CHECK_SIZE  ;
-         int i;
-         for (i=0; i < _size; i++) putchar(outData[i]);
-
-         if (APP_Rx_ptr_in + _size < APP_RX_DATA_SIZE)
-         {
-            memcpy(&APP_Rx_Buffer[APP_Rx_ptr_in], outData, _size);
-            APP_Rx_ptr_in += _size;
-         }
-         else
-         {
-            int freeSpace = APP_RX_DATA_SIZE - APP_Rx_ptr_in;
-
-            memcpy(&APP_Rx_Buffer[APP_Rx_ptr_in], outData, freeSpace);
-            APP_Rx_ptr_in = 0;
-            memcpy(&APP_Rx_Buffer[APP_Rx_ptr_in], &outData[freeSpace], _size - freeSpace);
-            APP_Rx_ptr_in += _size - freeSpace;
-         }
-         //     APP_FOPS.pIf_DataTx((uint8_t*)outData,
-         //             paramSize+HEADER_SIZE+CHECK_SIZE);
-
-         // __enable_irq();
-         return paramSize + HEADER_SIZE + CHECK_SIZE;
+	uint32_t i;
+	uint8_t* tempPtr = (uint8_t*) ptr;
+	for ( i = 0; i < deltaPos; i++)
+	{
+		tempPtr++;
+		if (tempPtr >= comReceiveBuffer + comBufLength)
+			tempPtr = (uint8_t*) comReceiveBuffer;
+	}
+	return tempPtr;	
 }
 
+// Send answer in specified form
+void sendAnswer(uint8_t command, uint8_t* params, uint8_t numberOfParams)
+{
+	uint8_t i;
+	// Length of package (Sync bit + adress + length bit + command + checksum + parameters)
+	uint8_t length = 0x05 + numberOfParams;
+	uint8_t checksum = (uint8_t)(COM_SYNC_BYTE + COM_RASPB_ADR_BYTE) + length + command;
+	usartPutC(COM_USART_MODULE, COM_SYNC_BYTE);
+	usartPutC(COM_USART_MODULE, COM_RASPB_ADR_BYTE);
+	usartPutC(COM_USART_MODULE, length);
+	usartPutC(COM_USART_MODULE, command);
+	for (i = 0; i < numberOfParams; i++ )
+	{
+		usartPutC(COM_USART_MODULE, params[i]);
+		checksum += params[i];
+	}
+	usartPutC(COM_USART_MODULE, checksum);
+	return;
+}
 
+// Interrupt handler for receiving data from Raspberry Pi (COM_USART_MODULE = USART1)
+void USART1_IRQHandler ()
+{
+	if (READ_BIT(COM_USART_MODULE->SR, USART_SR_RXNE))
+	{
+		CLEAR_BIT(COM_USART_MODULE->SR, USART_SR_RXNE);
+		const uint8_t byte = COM_USART_MODULE->DR;
+		*comReceiveBufferEnd = byte;
+		comReceiveBufferEnd = incrementPtr(comReceiveBufferEnd, 0x01);
+		size = getBytesAvailable(comReceiveBufferStart, comReceiveBufferEnd);
+		return;
+	}
+}
