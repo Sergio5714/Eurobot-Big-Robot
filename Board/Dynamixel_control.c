@@ -472,7 +472,7 @@ void initServoUSART (void)
 
 void sendServoByte (const uint8_t byte)
 {
-	   usartPutC(DYNAMIXEL_USART_MODULE, (uint16_t)byte);
+	   usartPutCharNoEcho(SERVO_USART_MODULE, (uint8_t)byte);
 }
 
 void clearServoReceiveBuffer (void)

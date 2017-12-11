@@ -12,12 +12,14 @@ on an STM32F4 chip.
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define REC_BUFFER_LEN 32
-#define SERVO_MAX_PARAMS (REC_BUFFER_LEN - 5)
+#define SERVO_USART_MODULE        DYNAMIXEL_USART_MODULE
 
-#define REC_WAIT_START_US    75
-#define REC_WAIT_PARAMS_US   (SERVO_MAX_PARAMS * 5)
-#define REC_WAIT_MAX_RETRIES 20000
+#define REC_BUFFER_LEN            32
+#define SERVO_MAX_PARAMS          (REC_BUFFER_LEN - 5)
+
+#define REC_WAIT_START_US         75
+#define REC_WAIT_PARAMS_US        (SERVO_MAX_PARAMS * 5)
+#define REC_WAIT_MAX_RETRIES      20000
 
 #define SERVO_INSTRUCTION_ERROR   (1 << 6)
 #define SERVO_OVERLOAD_ERROR      (1 << 5)
