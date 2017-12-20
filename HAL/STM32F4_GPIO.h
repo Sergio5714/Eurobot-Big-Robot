@@ -65,6 +65,12 @@ typedef struct
 	GPIO_PuPd_TypeDef        GPIO_PuPd_Mode;
 }GPIO_Init_TypeDef;
 
+// Struct for GPIO pin
+typedef struct
+{             
+	GPIO_TypeDef*           port;
+	GPIO_Pin_Number_Typedef number;
+}GPIO_Pin_TypeDef;
 
 // Macros for alternative functions
 // AF 1 selection     

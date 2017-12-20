@@ -87,30 +87,30 @@ void timInitPwm(TIM_TypeDef* TIMx, TIM_Init_Typedef* TIM_Init, float dutyCycle[4
 }
 
 // Change PWM duty cycle "on fly"
-void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, float dutyCycle, int channel)
+void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, uint8_t channel, float dutyCycle)
 {
 	if (channel == TIM_PWM_CHANNEL_1)
 	{
 		TIMx->CCR1 = (TIMx->ARR) * (dutyCycle);
-		//return;
+		return;
 	}
 	
 	if (channel == TIM_PWM_CHANNEL_2)
 	{
 		TIMx->CCR2 = (TIMx->ARR) * (dutyCycle);
-		//return;
+		return;
 	}
 	
 	if (channel == TIM_PWM_CHANNEL_3)
 	{
 		TIMx->CCR3 = (TIMx->ARR) * (dutyCycle);
-		//return;
+		return;
 	}
 	
 	if (channel == TIM_PWM_CHANNEL_4)
 	{
 		TIMx->CCR4 = (TIMx->ARR) * (dutyCycle);
-		//return;
+		return;
 	}
 	// Generate update event to transfer all values from shadow registers to real ones
 	TIMx->EGR  = TIM_EGR_UG;

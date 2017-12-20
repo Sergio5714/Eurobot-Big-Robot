@@ -254,11 +254,11 @@ ErrorStatus usartPutC(USART_TypeDef * USARTx, unsigned char c)
 	// Wait for transmitter's flag
 		while (!(USARTx->SR & USART_SR_TC) )
 		{
-				ticks--;
-				if (ticks == 0)
-				{
-					return ERROR;
-				}
+			ticks--;
+			if (ticks == 0)
+			{
+				return ERROR;
+			}
 		}
 	return SUCCESS;
 }
@@ -272,11 +272,11 @@ ErrorStatus usartPutCharNoEcho(USART_TypeDef * USARTx, unsigned char c)
 	// Wait for transmitter's flag
 		while (!(USARTx->SR & USART_SR_TC) )
 		{
-				ticks--;
-				if (ticks == 0)
-				{
-					return ERROR;
-				}
+			ticks--;
+			if (ticks == 0)
+			{
+				return ERROR;
+			}
 		}
 	USARTx->CR1 |= USART_CR1_RE;
 	return SUCCESS;

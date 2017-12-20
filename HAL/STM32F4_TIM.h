@@ -17,10 +17,17 @@ typedef struct
 	TIM_Dir_Typedef TIM_Dir;
 }TIM_Init_Typedef;
 
+// Struct for channel PWM control
+typedef struct
+{
+	TIM_TypeDef* timModule;
+	uint8_t channel;
+}TIM_PWM_Typedef;
+
 // Timer's channels enumerator
 enum
 {
-	TIM_PWM_CHANNEL_1 = 1,
+	TIM_PWM_CHANNEL_1 = 0x01,
 	TIM_PWM_CHANNEL_2,
 	TIM_PWM_CHANNEL_3,
 	TIM_PWM_CHANNEL_4
@@ -40,7 +47,7 @@ void timSetOnePulseMode(TIM_TypeDef* TIMx);
 void timInitPwm(TIM_TypeDef* TIMx, TIM_Init_Typedef* TIM_Init, float dutyCycle[4], uint8_t channels[4]);
 
 // Change PWM duty cycle "on fly"
-void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, float dutyCycle, int channel);
+void timPwmChangeDutyCycle(TIM_TypeDef* TIMx, uint8_t channel, float dutyCycle);
 
 //------------------------------------ Encoder mode ------------------------------------//
 
