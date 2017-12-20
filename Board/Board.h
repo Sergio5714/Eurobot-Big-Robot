@@ -36,15 +36,9 @@
 #define COM_USART_RX_PIN_PORT            GPIOB
 #define COM_USART_RX_PIN_NUMBER          GPIO_Pin_7
 
-//--------------------------------------------- LEDs for debug -----------------------------------------------//
-
-//#define DEBUG_LED_PORT                   GPIOD
-//#define DEBUG_LED_GREEN_PIN              GPIO_Pin_12
-//#define DEBUG_LED_ORANGE_PIN             GPIO_Pin_13
-//#define DEBUG_LED_RED_PIN                GPIO_Pin_14
-//#define DEBUG_LED_BLUE_PIN               GPIO_Pin_15
-
 //--------------------------------------------- Encoders -----------------------------------------------------//
+// Initial value for TIM->CNT register (30000)
+#define ENCODER_CNT_INITIAL_VALUE        0x7530
 
 #define ENCODER_1_TIM_MODULE             TIM8
 #define ENCODER_1_CHA_PORT               GPIOC
@@ -52,7 +46,7 @@
 #define ENCODER_1_CHB_PORT               GPIOC
 #define ENCODER_1_CHB_PIN                GPIO_Pin_6
 #define ENCODER_1_PIN_AF                 GPIO_AF_TIM8
-#define ENCODER_1_CNT                    (ENCODER_1_TIM_MODULE->CNT)
+#define ENCODER_1_CNT                    ((uint16_t *)&(ENCODER_1_TIM_MODULE->CNT))
 
 #define ENCODER_2_TIM_MODULE             TIM1
 #define ENCODER_2_CHA_PORT               GPIOE
@@ -60,7 +54,7 @@
 #define ENCODER_2_CHB_PORT               GPIOE
 #define ENCODER_2_CHB_PIN                GPIO_Pin_9
 #define ENCODER_2_PIN_AF                 GPIO_AF_TIM1
-#define ENCODER_2_CNT                    (ENCODER_2_TIM_MODULE->CNT)
+#define ENCODER_2_CNT                    ((uint16_t *)&(ENCODER_2_TIM_MODULE->CNT))
 
 #define ENCODER_3_TIM_MODULE             TIM3
 #define ENCODER_3_CHA_PORT               GPIOA
@@ -68,7 +62,7 @@
 #define ENCODER_3_CHB_PORT               GPIOA
 #define ENCODER_3_CHB_PIN                GPIO_Pin_7
 #define ENCODER_3_PIN_AF                 GPIO_AF_TIM3
-#define ENCODER_3_CNT                    (ENCODER_3_TIM_MODULE->CNT)
+#define ENCODER_3_CNT                    ((uint16_t *)&(ENCODER_3_TIM_MODULE->CNT))
 
 #define ENCODER_4_TIM_MODULE             TIM2
 #define ENCODER_4_CHA_PORT               GPIOB
@@ -76,14 +70,20 @@
 #define ENCODER_4_CHB_PORT               GPIOA
 #define ENCODER_4_CHB_PIN                GPIO_Pin_15
 #define ENCODER_4_PIN_AF                 GPIO_AF_TIM2
-#define ENCODER_4_CNT                    (ENCODER_4_TIM_MODULE->CNT)
+#define ENCODER_4_CNT                    ((uint16_t *)&(ENCODER_4_TIM_MODULE->CNT))
 
 //--------------------------------------------- Motor control (PWM) ------------------------------------------------//
-// ARR = 42000, PSC = 2,fapb1 = 42 MHZ, PWM frequency = 1000 Hz
-#define MOTOR_TIM_MODULE                 TIM4
-#define MOTOR_TIM_PSC                    0x02
-#define MOTOR_TIM_ARR                    0xA410
+
+// ARR = 42000, PSC = 2, fapb1 = 42 MHZ, PWM frequency = 1000 Hz
+#define MOTOR_PWM_TIM_MODULE             TIM4
+#define MOTOR_PWM_TIM_PSC                0x02
+#define MOTOR_PWM_TIM_ARR                0xA410
 #define MOTOR_PWM_PIN_AF                 GPIO_AF_TIM4
+
+#define MOTOR_CH1_NUMBER                 0x01
+#define MOTOR_CH2_NUMBER                 0x02
+#define MOTOR_CH3_NUMBER                 0x03
+#define MOTOR_CH4_NUMBER                 0x04
 
 #define MOTOR_CH_PWM_PORT                GPIOD
 #define MOTOR_CH1_PWM_PIN                GPIO_Pin_12
@@ -109,6 +109,15 @@
 #define MOTOR_CH4_EN_PORT                GPIOE
 #define MOTOR_CH4_EN_PIN                 GPIO_Pin_14
 
+//--------------------------------------------- Timer for motor control (100 Hz) ------------------------------------------------//
+
+// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, PWM frequency = 100 Hz
+#define MOTOR_CONTROL_TIM_MODULE         TIM6
+#define MOTOR_CONTROL_TIM_PSC            0x14
+#define MOTOR_CONTROL_TIM_ARR            0xA410
+#define MOTOR_CONTROL_IRQN               TIM6_DAC_IRQn
+#define MOTOR_CONTROL_PERIOD             0.01
+#define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
 
 // Initialize all necessary peripheral devices
 void boardInitAll(void);

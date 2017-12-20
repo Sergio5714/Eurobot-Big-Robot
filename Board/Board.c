@@ -1,4 +1,23 @@
 #include "Board.h"
+TIM_PWM_Typedef motorPwmCh[4] = {{MOTOR_PWM_TIM_MODULE, MOTOR_CH1_NUMBER},
+                                {MOTOR_PWM_TIM_MODULE, MOTOR_CH2_NUMBER},
+								{MOTOR_PWM_TIM_MODULE, MOTOR_CH3_NUMBER},
+								{MOTOR_PWM_TIM_MODULE, MOTOR_CH4_NUMBER}};
+
+GPIO_Pin_TypeDef motorDir[4] = {{MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN},
+                                {MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN},
+								{MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN},
+								{MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN}};
+
+GPIO_Pin_TypeDef motorEn[4] = {{MOTOR_CH1_EN_PORT, MOTOR_CH1_EN_PIN},
+                               {MOTOR_CH2_EN_PORT, MOTOR_CH2_EN_PIN},
+							   {MOTOR_CH3_EN_PORT, MOTOR_CH3_EN_PIN},
+							   {MOTOR_CH4_EN_PORT, MOTOR_CH4_EN_PIN}};
+
+uint16_t* encCnt[4] = {ENCODER_1_CNT,
+                       ENCODER_2_CNT,
+					   ENCODER_3_CNT,
+					   ENCODER_4_CNT};
 
 // Initialize all necessary peripheral devices
 void boardInitAll()
@@ -18,6 +37,7 @@ void boardInitAll()
 	// Usart initialization
 	usartSettings.USART_Baudrate = DYNAMIXEL_USART_BAUDRATE;
 	usartInit(DYNAMIXEL_USART_MODULE, &usartSettings);
+	
 	// Usart initialization for TX and Rx pin
 	gpioInitPin(DYNAMIXEL_USART_TX_PIN_PORT, DYNAMIXEL_USART_TX_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
 	gpioInitPinAf(DYNAMIXEL_USART_TX_PIN_PORT, DYNAMIXEL_USART_TX_PIN_NUMBER, DYNAMIXEL_USART_PIN_AF);
@@ -96,23 +116,30 @@ void boardInitAll()
 	gpioInitPin(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
 	gpioInitPin(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
 	
-	// Initialize timer module for PWM
-	timSettings.TIM_Period = MOTOR_TIM_ARR;
-	timSettings.TIM_Prescaler = MOTOR_TIM_PSC;
-	timInitBase(MOTOR_TIM_MODULE, &timSettings);
-	timInitPwm(MOTOR_TIM_MODULE, &timSettings, (float[4]){0, 0, 0, 0}, (uint8_t[4]){0x01, 0x01, 0x01, 0x01});
-
-	//--------------------------------------------- Initialization of onboard LEDs for debug --------------------//
+	// All directions CW
+	gpioPinSetLevel(MOTOR_CH1_DIR_PORT, MOTOR_CH1_DIR_PIN, GPIO_LEVEL_HIGH);
+	gpioPinSetLevel(MOTOR_CH2_DIR_PORT, MOTOR_CH2_DIR_PIN, GPIO_LEVEL_HIGH);
+	gpioPinSetLevel(MOTOR_CH3_DIR_PORT, MOTOR_CH3_DIR_PIN, GPIO_LEVEL_HIGH);
+	gpioPinSetLevel(MOTOR_CH4_DIR_PORT, MOTOR_CH4_DIR_PIN, GPIO_LEVEL_HIGH);
 	
-//	gpioInitPin(DEBUG_LED_PORT, DEBUG_LED_GREEN_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
-//	gpioInitPin(DEBUG_LED_PORT, DEBUG_LED_ORANGE_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
-//	gpioInitPin(DEBUG_LED_PORT, DEBUG_LED_RED_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
-//	gpioInitPin(DEBUG_LED_PORT, DEBUG_LED_BLUE_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
+	// Initialize timer module for PWM
+	timSettings.TIM_Period = MOTOR_PWM_TIM_ARR;
+	timSettings.TIM_Prescaler = MOTOR_PWM_TIM_PSC;
+	timInitBase(MOTOR_PWM_TIM_MODULE, &timSettings);
+	timInitPwm(MOTOR_PWM_TIM_MODULE, &timSettings, (float[4]){0.1, 0.1, 0.1, 0.1}, (uint8_t[4]){0x01, 0x01, 0x01, 0x01});
+	
+	//--------------------------------------------- PID timer initialization ------------------------------------//
+	timSettings.TIM_Period = MOTOR_CONTROL_TIM_ARR;
+	timSettings.TIM_Prescaler = MOTOR_CONTROL_TIM_PSC;
+	timInitBase(MOTOR_CONTROL_TIM_MODULE, &timSettings);
+	
+	// Update interrupt enable
+	timInterruptEnable(MOTOR_CONTROL_TIM_MODULE, TIM_DIER_UIE);
 	
 	//--------------------------------------------- Enable octal buffer for dynamixel signal pin ----------------//
 
 	gpioInitPin(GPIOB, GPIO_Pin_12, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
-	gpioPinSetLevel(GPIOB, GPIO_Pin_12, GPIO_LEVEL_LOW);
+	gpioPinSetLevel(GPIOB, GPIO_Pin_12, GPIO_LEVEL_HIGH);
 	
 	//--------------------------------------------- Enable modules ----------------------------------------------//
 	
@@ -126,12 +153,15 @@ void boardInitAll()
 	timEnable(ENCODER_3_TIM_MODULE);
 	timEnable(ENCODER_4_TIM_MODULE);
 	
+	// Enable timers
 	// Enable PWM for Motors
-	timEnable(MOTOR_TIM_MODULE);
+	timEnable(MOTOR_PWM_TIM_MODULE);
+	// Enable motor control timer
+	timEnable(MOTOR_CONTROL_TIM_MODULE);
 	
 	//--------------------------------------------- Enable interrupts -------------------------------------------//
 	__enable_irq();
 	__NVIC_EnableIRQ(COM_USART_IRQN);
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
-	
+	__NVIC_EnableIRQ(MOTOR_CONTROL_IRQN);
 }
