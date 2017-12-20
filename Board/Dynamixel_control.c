@@ -368,8 +368,7 @@ bool getServoAngle (const uint8_t servoId,
     angleValue <<= 8;
     angleValue |= response.params[0];
 
-    *angle = (float)angleValue * 300.0 / 1023.0;
-
+    *angle = (float)(angleValue) * (float)300.0 / (float)1023.0;
     return true;
 }
 
