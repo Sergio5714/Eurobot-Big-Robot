@@ -23,8 +23,8 @@ enum
 	
 	SET_SPEED_ROBOT_CS1    = 0x08,
 	READ_SPEED_ROBOT_CS1   = 0x09,
-	
 	READ_COORD_ROBOT_CS1   = 0x0A,
+	
 	SET_ANGLE_DNMX         = 0x0B,
 	GET_ANGLE_DNMX         = 0x0C,
 	
