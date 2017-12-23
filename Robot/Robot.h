@@ -18,13 +18,13 @@
 #define ESCON_CALIBR_COEF_B            0.1
 
 
-// Minimum and maximum speed in rad/s 
+// Minimum and maximum speed of motor/wheel in rad/s 
 // (it corresponds to maximum duty cycle of 0.9 and minimum duty cycle of 0.1)
 #define MAX_ROT_SPEED                  27.22713
 #define MIN_ROT_SPEED                  0.0
+#define EPS_OF_ROT_SPEED               0.004
 
 // Parameters of motors
-
 // Gear ratios 
 #define MAXON_MOTOR_SHORT_GR           26.0
 #define MAXON_MOTOR_LONG_GR            21.0
@@ -39,6 +39,12 @@
 // Ticks to speed (rad/s) coefficient 
 #define TICKS_TO_SPEED_COEF_LONG       2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
 #define TICKS_TO_SPEED_COEF_SHORT      2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
+
+typedef struct 
+{
+	uint8_t movingStatusFlag;
+	uint8_t forwardKinCalcStatusFlag;
+}RobotStatus;
 
 // For setMotorSpeed function
 extern TIM_PWM_Typedef motorPwmCh[4];
@@ -65,6 +71,9 @@ void calcForwardKin(void);
 
 // Calculate inverse kinematics (from encoder's speed to global speeds in robot's SC)
 void calcInverseKin(void);
+
+// Check status
+void updateRobotStatus(void);
 
 // Maximum value of array
 void MaxValue(float *a, uint8_t rows,float *b);

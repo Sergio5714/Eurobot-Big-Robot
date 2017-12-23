@@ -1,9 +1,12 @@
 #include "Robot.h"
 
+// Struct for current robot status 
+RobotStatus Robot;
+
 // Values, calculated by using encoder's data (input)
 // Speeds (rps) and coordinates (rotations) of particular motor
-float wheelSpeed[ROBOT_NUMBER_OF_MOTORS];
-float wheelCoord[ROBOT_NUMBER_OF_MOTORS];
+float wheelsSpeed[ROBOT_NUMBER_OF_MOTORS];
+float wheelsCoord[ROBOT_NUMBER_OF_MOTORS];
 
 // Speeds and coordinates of in robot coordinate system
 float robotSpeedSc1[3];
@@ -89,7 +92,7 @@ void calcForwardKin(void)
 void calcInverseKin(void)
 {
 	// Multiply inverse kinematics matrix by motor's speed
-	matrixMultiplyM2M(&InverseKinematics[0][0], 3, ROBOT_NUMBER_OF_MOTORS, &wheelSpeed[0], ROBOT_NUMBER_OF_MOTORS, 1, &robotSpeedSc1[0]);
+	matrixMultiplyM2M(&InverseKinematics[0][0], 3, ROBOT_NUMBER_OF_MOTORS, &wheelsSpeed[0], ROBOT_NUMBER_OF_MOTORS, 1, &robotSpeedSc1[0]);
 }
 
 // Set speeds for all motors
@@ -133,25 +136,45 @@ void readEnc(void)
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
 		// Actually now it is only motor's speed, but not wheel speed
-		wheelSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT;
-		// Now one motor (1st) is especial (19.12.2017)
-		if (i == 1)
+		wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT;
+		// Now one motor (1st and 3rd) is especial (20.12.2017)
+		if ((i == 0) || (i == 2))
 		{
-			wheelSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG;	
+			wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG;	
 		}
 	}
 	
 	// Inverse motors 2 and 4 because of cylindrical transmission (Positive direction is CCW)
-	wheelSpeed[1] = - wheelSpeed[1];
-	wheelSpeed[3] = - wheelSpeed[3];
+	wheelsSpeed[1] = - wheelsSpeed[1];
+	wheelsSpeed[3] = - wheelsSpeed[3];
 	
 	// Calculate distance that wheel passed
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
-		wheelCoord[i] += wheelSpeed[i] * MOTOR_CONTROL_PERIOD;
+		wheelsCoord[i] += wheelsSpeed[i] * MOTOR_CONTROL_PERIOD;
+	}
+	
+	// Calculation of inverse kinematics (wheelsSpeed -> robotSpeedSc1)
+	calcInverseKin();
+	for (i = 0x00; i < 0x03; i++)
+	{
+		robotCoordSc1[i] += robotSpeedSc1[i] * MOTOR_CONTROL_PERIOD;
 	}
 	return;
 }
 
-
-
+// Check status
+void updateRobotStatus(void)
+{
+	uint8_t i;
+	for ( i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++ )
+	{
+		if (wheelsSpeed[i] > EPS_OF_ROT_SPEED)
+		{
+			Robot.movingStatusFlag = 0x01;
+			return;
+		}
+	}
+	Robot.movingStatusFlag = 0x01;
+	return;
+}
