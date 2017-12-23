@@ -1,22 +1,23 @@
 #include "Interrupts.h"
-#include "STM32F4_GPIO.h"
-#include "STM32F4_UART.h"
-#include "Board.h"
+extern RobotStatus Robot;
 
-// Interrupt handler for receiving data from Raspberry Pi (DEBUG_USART_MODULE = USART1)
-void USART1_IRQHandler ()
+// Interrupt handler for motor control
+void TIM6_DAC_IRQHandler(void)
 {
-	if (READ_BIT(DEBUG_USART_MODULE->SR, USART_SR_RXNE))
+	if (MOTOR_CONTROL_TIM_MODULE->SR & TIM_SR_UIF)
 	{
-		CLEAR_BIT(DEBUG_USART_MODULE->SR, USART_SR_RXNE);
-
-		buf = DEBUG_USART_MODULE->DR;
-		
-		usartPutStr(DEBUG_USART_MODULE, "byte: ");
-		usartPutC(DEBUG_USART_MODULE, buf);
-		usartPutStr(DEBUG_USART_MODULE, " ");
-		usartPutStr(DEBUG_USART_MODULE,"\n");
-	
-		gpioPinChangeLevel(DEBUG_LED_PORT, DEBUG_LED_GREEN_PIN);
+		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
+		// Read data from Encoders
+		readEnc();
+		if (Robot.forwardKinCalcStatusFlag)
+		{
+			// Calculate Forward kinematics ( robotTargetSpeedCs1 -> robotTargetMotorSpeedCs1)
+			calcForwardKin();
+			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
+			setMotorSpeeds();
+		}
+		// Update robot status
+		updateRobotStatus();
 	}
+	return;
 }

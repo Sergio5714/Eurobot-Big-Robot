@@ -2,11 +2,21 @@
 #define STM32F4_INTERRUPTS
 
 #include "stm32f4xx.h"
+#include "Board.h"
+#include "Robot.h"
 
 extern uint8_t buf;
 
-// Interrupt handler for receiving data from Raspberry Pi (now it is debug module)
+// Interrupt handler for receiving data from Raspberry Pi (DEBUG_USART_MODULE = USART1)
+// This Interrupt is written in Communication.c
 void USART1_IRQHandler(void);
+
+// Interrupt handler for communication with Dynamixel servo
+// This Interrupt is written in Dynamixel_control.c
+void UART4_IRQHandler (void);
+
+// Interrupt handler for motor control
+void TIM6_DAC_IRQHandler(void);
 
 
 
