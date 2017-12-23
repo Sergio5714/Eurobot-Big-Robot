@@ -6,6 +6,7 @@
 #include "STM32F4_UART.h"
 #include "STM32F4_RCC.h"
 #include "Dynamixel_control.h"
+#include "Interrupts.h"
 
 //--------------------------------------------- USART modules ------------------------------------------------//
 
