@@ -18,12 +18,9 @@ float MRotSpeed[4][3] = { 0.0,  0.0,  -6.85,  // forward rotation matrix
 
 
 //For the third picture in the solution part
-
-
-
-float InverseKinematics[3][4] = { 0.0212,  0.0212,  -0.0212,  -0.0212,  // inverse matrix
-                                 -0.0212,  0.0212,   0.0212,  -0.0212,     
-                                 -0.1459,  0.1459,  -0.1459,   0.1459 };
+float InverseKinematics[3][4] = { 0.0053025, -0.0053025,   0.0053025,  -0.0053025,  // inverse matrix
+                                 -0.0053025, -0.0053025,   0.0053025,   0.0053025,     
+                                 -0.0362425, -0.0362425,  -0.0362425,  -0.0362425 };
 
 
 
