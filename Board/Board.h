@@ -19,14 +19,14 @@
 #define DYNAMIXEL_USART_RX_PIN_PORT      GPIOC
 #define DYNAMIXEL_USART_RX_PIN_NUMBER    GPIO_Pin_11
 
-#define DEBUG_USART_MODULE               USART1
-#define DEBUG_USART_IRQN                 USART1_IRQn
-#define DEBUG_USART_BAUDRATE             9600
-#define DEBUG_USART_PIN_AF               GPIO_AF_USART1
-#define DEBUG_USART_TX_PIN_PORT          GPIOB
-#define DEBUG_USART_TX_PIN_NUMBER        GPIO_Pin_6
-#define DEBUG_USART_RX_PIN_PORT          GPIOB
-#define DEBUG_USART_RX_PIN_NUMBER        GPIO_Pin_7
+//#define DEBUG_USART_MODULE               USART1
+//#define DEBUG_USART_IRQN                 USART1_IRQn
+//#define DEBUG_USART_BAUDRATE             9600
+//#define DEBUG_USART_PIN_AF               GPIO_AF_USART1
+//#define DEBUG_USART_TX_PIN_PORT          GPIOB
+//#define DEBUG_USART_TX_PIN_NUMBER        GPIO_Pin_6
+//#define DEBUG_USART_RX_PIN_PORT          GPIOB
+//#define DEBUG_USART_RX_PIN_NUMBER        GPIO_Pin_7
 
 #define COM_USART_MODULE                 USART1
 #define COM_USART_IRQN                   USART1_IRQn
@@ -117,8 +117,15 @@
 #define MOTOR_CONTROL_TIM_PSC            0x14
 #define MOTOR_CONTROL_TIM_ARR            0xA410
 #define MOTOR_CONTROL_IRQN               TIM6_DAC_IRQn
-#define MOTOR_CONTROL_PERIOD             0.01
+#define MOTOR_CONTROL_PERIOD             0.01f
 #define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
+
+//--------------------------------------------- Enable pins --------------------------------------------------------------------//
+
+// Pin turns microchip for communication with servos (0 - transmitting data, 1 - receiving data)
+#define DYNAMIXEL_SIGNAL_EN_PIN          GPIO_Pin_12
+#define DYNAMIXEL_SIGNAL_EN_PORT         GPIOB
+
 
 // Initialize all necessary peripheral devices
 void boardInitAll(void);

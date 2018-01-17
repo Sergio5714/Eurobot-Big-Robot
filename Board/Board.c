@@ -136,10 +136,10 @@ void boardInitAll()
 	// Update interrupt enable
 	timInterruptEnable(MOTOR_CONTROL_TIM_MODULE, TIM_DIER_UIE);
 	
-	//--------------------------------------------- Enable octal buffer for dynamixel signal pin ----------------//
+	//--------------------------------------------- Enable microchip for dynamixel signal pin -------------------//
 
-	gpioInitPin(GPIOB, GPIO_Pin_12, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
-	gpioPinSetLevel(GPIOB, GPIO_Pin_12, GPIO_LEVEL_HIGH);
+	gpioInitPin(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
+	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_HIGH);
 	
 	//--------------------------------------------- Enable modules ----------------------------------------------//
 	
