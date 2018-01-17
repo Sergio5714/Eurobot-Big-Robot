@@ -85,7 +85,7 @@ void checkCommandAndExecute()
 			
 			break;
 		}
-		case READ_ALL_WHEELS_SPEEDS:
+		case GET_ALL_WHEELS_SPEEDS:
 		{
 			// Check if number of wheels was received
 			if (inputCommand.numberOfreceivedParams != 0x01)
@@ -111,26 +111,26 @@ void checkCommandAndExecute()
 			robotTargetSpeedCs1[2] = *(__packed float*)(inputCommand.params + 0x08);
 			break;
 		}
-		case READ_SPEED_ROBOT_CS1:
+		case GET_SPEED_ROBOT_CS1:
 		{
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
 			// Send Answer of 4 float (12 bytes)
-			sendAnswer(inputCommand.command, (__packed uint8_t*)robotSpeedSc1, 0x0C);
+			sendAnswer(inputCommand.command, (__packed uint8_t*)robotSpeedCs1, 0x0C);
 			break;
 		}
-		case READ_COORD_ROBOT_CS1:
+		case GET_COORD_ROBOT_CS1:
 		{
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
 			// Send Answer of 4 float (12 bytes)
-			sendAnswer(inputCommand.command, (__packed uint8_t*)robotCoordSc1, 0x0C);
+			sendAnswer(inputCommand.command, (__packed uint8_t*)robotCoordCs1, 0x0C);
 			uint8_t i = 0x01;
 			for (i = 0x00; i < 0x03; i++)
 			{
-				robotCoordSc1[i] = 0;
+				robotCoordCs1[i] = 0;
 			}
 			break;
 		}
@@ -157,6 +157,28 @@ void checkCommandAndExecute()
 			sendAnswer(inputCommand.command, (uint8_t*)&answerFloat, 0x04);
 			break;
 		}
+		case SET_COORD_ROBOT_CS_GLOBAL:
+		{
+			// Check if 12 bytes (= 3 float) was received
+			if (inputCommand.numberOfreceivedParams != 0x0C)
+				break;
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			// Copy target speeds
+			robotCoordCsGlobal[0] = *(__packed float*)(inputCommand.params);
+			robotCoordCsGlobal[1] = *(__packed float*)(inputCommand.params + 0x04);
+			robotCoordCsGlobal[2] = *(__packed float*)(inputCommand.params + 0x08);
+			break;
+		}
+		case GET_COORD_ROBOT_CS_GLOBAL:
+		{
+			// Check if there is no parameters
+			if (inputCommand.numberOfreceivedParams != 0x00)
+				break;
+			// Send Answer of 4 float (12 bytes)
+			sendAnswer(inputCommand.command, (__packed uint8_t*)robotCoordCsGlobal, 0x0C);
+			break;
+		}
 		case TURN_FORW_KIN_ON_OFF:
 		{
 			if (inputCommand.numberOfreceivedParams != 0x01)
@@ -181,7 +203,7 @@ void checkCommandAndExecute()
 			uint8_t buf [13];
 			uint8_t i;
 			buf[0] = Robot.movingStatusFlag;
-			__packed uint8_t* bufPtr = (__packed uint8_t*)robotCoordSc1;
+			__packed uint8_t* bufPtr = (__packed uint8_t*)robotCoordCs1;
 			for (i = 0x00; i < 0x0C; i++)
 			{
 				buf[i + 0x01] = *bufPtr;
