@@ -1,4 +1,3 @@
-#include "Kinematics.h"
 //This document includes the forward and reverse kinematics of a robot with 4 omni wheels
 //Full explanation is here: ( https://docs.google.com/document/d/1IShP9O5Ke3e50hDjm0TVveUJd4YA53RzAsRMRkQrHEM/edit )
 //For the first picture in the solution part

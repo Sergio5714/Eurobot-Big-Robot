@@ -128,13 +128,21 @@ void boardInitAll()
 	timInitBase(MOTOR_PWM_TIM_MODULE, &timSettings);
 	timInitPwm(MOTOR_PWM_TIM_MODULE, &timSettings, (float[4]){0.1, 0.1, 0.1, 0.1}, (uint8_t[4]){0x01, 0x01, 0x01, 0x01});
 	
-	//--------------------------------------------- PID timer initialization ------------------------------------//
+	//--------------------------------------------- Motor control timer initialization ---------------------------//
 	timSettings.TIM_Period = MOTOR_CONTROL_TIM_ARR;
 	timSettings.TIM_Prescaler = MOTOR_CONTROL_TIM_PSC;
 	timInitBase(MOTOR_CONTROL_TIM_MODULE, &timSettings);
 	
 	// Update interrupt enable
 	timInterruptEnable(MOTOR_CONTROL_TIM_MODULE, TIM_DIER_UIE);
+	
+	//--------------------------------------------- Manipulators control timer initialization --------------------//
+	timSettings.TIM_Period = SERVO_CHECKER_TIM_ARR;
+	timSettings.TIM_Prescaler = SERVO_CHECKER_TIM_PSC;
+	timInitBase(SERVO_CHECKER_TIM_MODULE, &timSettings);
+	
+	// Update interrupt enable
+	timInterruptEnable(SERVO_CHECKER_TIM_MODULE, TIM_DIER_UIE);
 	
 	//--------------------------------------------- Enable microchip for dynamixel signal pin -------------------//
 
@@ -156,12 +164,21 @@ void boardInitAll()
 	// Enable timers
 	// Enable PWM for Motors
 	timEnable(MOTOR_PWM_TIM_MODULE);
-	// Enable motor control timer
+	// Enable Motor control timer
 	timEnable(MOTOR_CONTROL_TIM_MODULE);
+	// Enable Manipulators control timer
+	timEnable(SERVO_CHECKER_TIM_MODULE);
 	
 	//--------------------------------------------- Enable interrupts -------------------------------------------//
-	__enable_irq();
 	__NVIC_EnableIRQ(COM_USART_IRQN);
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
 	__NVIC_EnableIRQ(MOTOR_CONTROL_IRQN);
+	__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
+	// Priority
+	__NVIC_SetPriority(COM_USART_IRQN, 0X00);
+	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X01);
+	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X03);
+	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X02);
+	// Global enable
+	__enable_irq();
 }

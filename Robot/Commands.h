@@ -9,6 +9,7 @@ extern float robotTargetSpeedCs1[3];
 extern float robotSpeedCs1[3];
 extern float robotCoordCs1[3];
 extern float robotCoordCsGlobal[3];
+extern Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 
 enum
 {
@@ -35,6 +36,10 @@ enum
 	TURN_FORW_KIN_ON_OFF       = 0x0D,
 	
 	GET_STATUS                 = 0xA0,
+	
+	TAKE_CUBE                  = 0xB0,
+	UNLOAD_TOWER               = 0xB1,
+	
 };
 
 void checkCommandAndExecute(void);

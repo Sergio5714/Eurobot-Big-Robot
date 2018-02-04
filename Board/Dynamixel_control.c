@@ -237,7 +237,7 @@ bool getServoTorque (const uint8_t servoId,
     *torqueValue = response.params[1];
     *torqueValue <<= 8;
     *torqueValue |= response.params[0];
-
+	
     return true;
 }
 
@@ -507,10 +507,10 @@ uint8_t getServoByte (void)
 
 void UART4_IRQHandler (void)
 {
-	uint32_t sr = DYNAMIXEL_USART_MODULE->SR;
 	// check if receive interrupt flag was set
-	if (READ_BIT(sr, USART_SR_RXNE))
+	if (READ_BIT(DYNAMIXEL_USART_MODULE->SR, USART_SR_RXNE))
 	{
+		CLEAR_BIT(DYNAMIXEL_USART_MODULE->SR, USART_SR_RXNE);
 		const uint8_t byte = DYNAMIXEL_USART_MODULE->DR; // grab the byte from the data register
 		receiveBufferEnd++;
 		if (receiveBufferEnd >= receiveBuffer + REC_BUFFER_LEN)

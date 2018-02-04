@@ -30,7 +30,7 @@
 
 #define COM_USART_MODULE                 USART1
 #define COM_USART_IRQN                   USART1_IRQn
-#define COM_USART_BAUDRATE               115200
+#define COM_USART_BAUDRATE               64000
 #define COM_USART_PIN_AF                 GPIO_AF_USART1
 #define COM_USART_TX_PIN_PORT            GPIOB
 #define COM_USART_TX_PIN_NUMBER          GPIO_Pin_6
@@ -73,7 +73,7 @@
 #define ENCODER_4_PIN_AF                 GPIO_AF_TIM2
 #define ENCODER_4_CNT                    ((uint16_t *)&(ENCODER_4_TIM_MODULE->CNT))
 
-//--------------------------------------------- Motor control (PWM) ------------------------------------------------//
+//--------------------------------------------- Motor PWM control  --------------------------------------------------//
 
 // ARR = 42000, PSC = 2, fapb1 = 42 MHZ, PWM frequency = 1000 Hz
 #define MOTOR_PWM_TIM_MODULE             TIM4
@@ -120,7 +120,17 @@
 #define MOTOR_CONTROL_PERIOD             0.01f
 #define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
 
-//--------------------------------------------- Enable pins --------------------------------------------------------------------//
+//--------------------------------------------- Timer for manipulators control (10 Hz) ----------------------------------------//
+
+// ARR = 42000, PSC = 200, fapb1 = 42 MHZ, PWM frequency = 10 Hz
+#define SERVO_CHECKER_TIM_MODULE         TIM5
+#define SERVO_CHECKER_TIM_PSC            0xC8
+#define SERVO_CHECKER_TIM_ARR            0xA410
+#define SERVO_CHECKER_IRQN               TIM5_IRQn
+#define SERVO_CHECKER_PERIOD             0.1f
+#define SERVO_CHECKER_TICKS_TO_SEC       0.00000238f
+
+//--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
 
 // Pin turns microchip for communication with servos (0 - transmitting data, 1 - receiving data)
 #define DYNAMIXEL_SIGNAL_EN_PIN          GPIO_Pin_12

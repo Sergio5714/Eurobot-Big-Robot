@@ -6,6 +6,7 @@
 #include "matrix.h"
 #include "stdlib.h"
 #include "math.h"
+#include "Manipulators.h"
 
 // Encoder imitation mode
 //#define ENCODER_IMITATION

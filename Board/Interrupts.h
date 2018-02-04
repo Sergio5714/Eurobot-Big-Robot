@@ -18,5 +18,9 @@ void UART4_IRQHandler (void);
 // Interrupt handler for motor control
 void TIM6_DAC_IRQHandler(void);
 
+// Interrupt handler for manipulators control
+// This interrupt is implemented in Manipulators.c
+void TIM5_IRQHandler(void);
+
 
 #endif

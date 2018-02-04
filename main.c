@@ -1,21 +1,31 @@
 #include "stm32f4xx.h"
 #include "Board.h"
 #include "Communication.h"
+#include "Manipulators.h"
 
-
-uint16_t ahbPresc;
-uint8_t apb1Presc;
-uint8_t apb2Presc;
+uint32_t numberOfReceivedPackages;
+uint32_t numberOfChecksumErrors;
+uint32_t numberOfSmallLengthErrors;
 
 int main()
 {		
  	boardInitAll();
-	ahbPresc = rccGetAhbPrescaler();
-	apb1Presc = rccGetApb1Prescaler();
-	apb2Presc = rccGetApb1Prescaler();
+	initManipulators();
 	while (1)
 	{
-		getPackage();
+		switch(getPackage())
+		{
+			case SMALL_LENGTH:
+				numberOfSmallLengthErrors++;
+				break;
+			case WRONG_CHECKSUM:
+				numberOfChecksumErrors++;
+				break;
+			case SUCCESFULL_PACKAGE:
+				numberOfReceivedPackages++;
+			default:
+				break;
+		};
 		checkCommandAndExecute();
 	}
 }

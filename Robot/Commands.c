@@ -94,8 +94,15 @@ void checkCommandAndExecute()
 			// Check if number of wheels exceeded real number or not
 			if (numberOfMotors > ROBOT_NUMBER_OF_MOTORS)
 				break;
+			// Save current coord to send data correctly (process can be interrupted and values can be changed)
+			float speedBuf[numberOfMotors];
+			uint8_t i;
+			for (i = 0x00; i < numberOfMotors; i++ )
+			{
+				speedBuf[i] = wheelsSpeed[i];
+			}
 			// Send Answer
-			sendAnswer(inputCommand.command, (__packed uint8_t*)wheelsSpeed, 0x04*numberOfMotors);
+			sendAnswer(inputCommand.command, (__packed uint8_t*)speedBuf, 0x04*numberOfMotors);
 			break;
 		}
 		case SET_SPEED_ROBOT_CS1:
@@ -116,8 +123,15 @@ void checkCommandAndExecute()
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
+			// Save current coord to send data correctly (process can be interrupted and values can be changed)
+			float speedBuf[3];
+			uint8_t i;
+			for (i = 0x00; i < 0x03; i++ )
+			{
+				speedBuf[i] = robotSpeedCs1[i];
+			}
 			// Send Answer of 4 float (12 bytes)
-			sendAnswer(inputCommand.command, (__packed uint8_t*)robotSpeedCs1, 0x0C);
+			sendAnswer(inputCommand.command, (__packed uint8_t*)speedBuf, 0x0C);
 			break;
 		}
 		case GET_COORD_ROBOT_CS1:
@@ -125,9 +139,15 @@ void checkCommandAndExecute()
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
+			// Save current coord to send data correctly (process can be interrupted and values can be changed)
+			float coordBuf[3];
+			uint8_t i;
+			for (i = 0x00; i < 0x03; i++ )
+			{
+				coordBuf[i] = robotCoordCs1[i];
+			}
 			// Send Answer of 4 float (12 bytes)
-			sendAnswer(inputCommand.command, (__packed uint8_t*)robotCoordCs1, 0x0C);
-			uint8_t i = 0x01;
+			sendAnswer(inputCommand.command, (__packed uint8_t*)coordBuf, 0x0C);
 			for (i = 0x00; i < 0x03; i++)
 			{
 				robotCoordCs1[i] = 0;
@@ -150,7 +170,6 @@ void checkCommandAndExecute()
 			if (inputCommand.numberOfreceivedParams != 0x01)
 				break;
 			float answerFloat;
-	
 			// Get angle from particular servo motor
 			getServoAngle(inputCommand.params[0], &answerFloat);
 			// send answer
@@ -175,8 +194,15 @@ void checkCommandAndExecute()
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
+			// Save current coord to send data correctly (process can be interrupted and values can be changed)
+			float coordBuf[3];
+			uint8_t i;
+			for (i = 0x00; i < 0x03; i++ )
+			{
+				coordBuf[i] = robotCoordCsGlobal[i];
+			}
 			// Send Answer of 4 float (12 bytes)
-			sendAnswer(inputCommand.command, (__packed uint8_t*)robotCoordCsGlobal, 0x0C);
+			sendAnswer(inputCommand.command, (__packed uint8_t*)coordBuf, 0x0C);
 			break;
 		}
 		case TURN_FORW_KIN_ON_OFF:
@@ -210,6 +236,30 @@ void checkCommandAndExecute()
 				bufPtr++;
 			}
 			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x0D);
+			break;
+		}
+		case TAKE_CUBE:
+		{
+			// Check if manipulator's id is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			setManipHighLevelCommand(TAKE_CUBE_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case UNLOAD_TOWER:
+		{
+			// Check if manipulator's id is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			setManipHighLevelCommand(UNLOAD_TOWER_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
 			break;
 		}
 	}
