@@ -22,20 +22,29 @@
 // Struct for  command
 typedef struct 
 {
-	uint8_t command ;
+	uint8_t command;
 	uint8_t params[COM_MAX_PARAM_SIZE];
 	uint8_t numberOfreceivedParams;
 	uint8_t status;
 } Command_Struct;
 
+// Typedef for errors in getPackage() functions 
+typedef enum 
+{
+	SMALL_LENGTH,
+	WRONG_CHECKSUM,
+	SUCCESFULL_PACKAGE,
+	WAIT_MODE
+} Typedef_Protocol_Error;
+
 // Get number of available bytes in buffer
-uint32_t getBytesAvailable(uint8_t* receiveBufferStart, uint8_t* receiveBufferEnd);
+uint32_t getBytesAvailable(const uint8_t* receiveBufferStart, const uint8_t* receiveBufferEnd);
 
 // Increment pointer of buffer
 uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos);
 
 // Check if there is a package in buffer
-ErrorStatus getPackage(void);
+Typedef_Protocol_Error getPackage(void);
 
 // Send answer in specified form
 void sendAnswer(uint8_t command, uint8_t* params, uint8_t numberOfParams);

@@ -5,16 +5,13 @@ uint8_t* comReceiveBufferStart = comReceiveBuffer;
 uint8_t* comReceiveBufferEnd = comReceiveBuffer;
 uint8_t comBufLength = COM_REC_BUFFER_LEN;
 
-// For debug, shows number of bytes available
-uint8_t size;
-
 // Structure for input command
 Command_Struct inputCommand;
 
-uint32_t getBytesAvailable(uint8_t* receiveBufferStart, uint8_t* receiveBufferEnd)
+uint32_t getBytesAvailable(const uint8_t* receiveBufferStart,const uint8_t* receiveBufferEnd)
 {
 	uint8_t* start = (uint8_t*) receiveBufferStart;
-	uint8_t* end = receiveBufferEnd;
+	uint8_t* end = (uint8_t*) receiveBufferEnd;
 
 	if (end >= start)
 		return (end - start);
@@ -22,7 +19,7 @@ uint32_t getBytesAvailable(uint8_t* receiveBufferStart, uint8_t* receiveBufferEn
 		return (comBufLength - (start - end));
 }
 // Check if there is a package in buffer
-ErrorStatus getPackage()
+Typedef_Protocol_Error getPackage()
 {
 	uint8_t i;
 	uint8_t* ptr = comReceiveBufferStart;
@@ -41,7 +38,7 @@ ErrorStatus getPackage()
 				// Too small length
 				packagelengthPtr = incrementPtr(ptr, 0x01);
 				comReceiveBufferStart = packagelengthPtr;
-				return ERROR;
+				return SMALL_LENGTH;
 			}
 			if (*packagelengthPtr <= getBytesAvailable(ptr, comReceiveBufferEnd))
 			{
@@ -73,7 +70,7 @@ ErrorStatus getPackage()
 					// Increment pointer
 					tempPtr = incrementPtr(tempPtr, 0x01);
 					comReceiveBufferStart = tempPtr;
-					return SUCCESS;
+					return SUCCESFULL_PACKAGE;
 				}
 				else
 				{
@@ -82,20 +79,23 @@ ErrorStatus getPackage()
 					// Command status - does not need to be executed (0x00)
 					inputCommand.status = 0x00;
 					comReceiveBufferStart = tempPtr;
-					return ERROR;
+					return WRONG_CHECKSUM;
 				}
 					
 			}
 			else
 			{
 				// Not all bytes have been received
-				return ERROR;
+				return WAIT_MODE;
 			}
 		}
-		ptr = incrementPtr(ptr, 0x01);
+		else
+		{
+			ptr = incrementPtr(ptr, 0x01);
+		}
 	}
 	comReceiveBufferStart = ptr;
-	return ERROR;
+	return WAIT_MODE;
 }
 
 // Increment pointer of buffer
@@ -107,7 +107,9 @@ uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos)
 	{
 		tempPtr++;
 		if (tempPtr >= comReceiveBuffer + comBufLength)
+		{
 			tempPtr = (uint8_t*) comReceiveBuffer;
+		}
 	}
 	return tempPtr;	
 }
@@ -141,7 +143,6 @@ void USART1_IRQHandler ()
 		const uint8_t byte = COM_USART_MODULE->DR;
 		*comReceiveBufferEnd = byte;
 		comReceiveBufferEnd = incrementPtr(comReceiveBufferEnd, 0x01);
-		size = getBytesAvailable(comReceiveBufferStart, comReceiveBufferEnd);
 		return;
 	}
 }

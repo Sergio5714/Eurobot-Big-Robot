@@ -237,7 +237,7 @@ bool getServoTorque (const uint8_t servoId,
     *torqueValue = response.params[1];
     *torqueValue <<= 8;
     *torqueValue |= response.params[0];
-
+	
     return true;
 }
 
@@ -331,11 +331,11 @@ bool getCurrentLoad (const uint8_t servoId,
 bool setServoAngle ( const uint8_t servoId,
                      const uint16_t angle)
 {
-    if (angle < 0 || angle > 300)
+    if (angle > 300)
         return false;
 
     // angle values go from 0 to 0x3ff (1023)
-    const uint16_t angleValue = (uint16_t)(angle * (1023.0 / 300.0));
+    const uint16_t angleValue = (uint16_t)(angle * (1023.0f / 300.0f));
 
     const uint8_t highByte = (uint8_t)((angleValue >> 8) & 0xff);
     const uint8_t lowByte = (uint8_t)(angleValue & 0xff);
@@ -368,7 +368,7 @@ bool getServoAngle (const uint8_t servoId,
     angleValue <<= 8;
     angleValue |= response.params[0];
 
-    *angle = (float)(angleValue) * (float)300.0 / (float)1023.0;
+    *angle = (float)(angleValue) * 300.0f / 1023.0f;
     return true;
 }
 
@@ -471,7 +471,13 @@ void initServoUSART (void)
 
 void sendServoByte (const uint8_t byte)
 {
-	   usartPutCharNoEcho(SERVO_USART_MODULE, (uint8_t)byte);
+	// Change microchip's mode for transmitting data
+	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_LOW);
+	
+	usartPutCharNoEcho(SERVO_USART_MODULE, (uint8_t)byte);
+	
+	// Change microchip's mode for receiving data
+	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_HIGH);
 }
 
 void clearServoReceiveBuffer (void)
@@ -501,10 +507,10 @@ uint8_t getServoByte (void)
 
 void UART4_IRQHandler (void)
 {
-	uint32_t sr = DYNAMIXEL_USART_MODULE->SR;
 	// check if receive interrupt flag was set
-	if (READ_BIT(sr, USART_SR_RXNE))
+	if (READ_BIT(DYNAMIXEL_USART_MODULE->SR, USART_SR_RXNE))
 	{
+		CLEAR_BIT(DYNAMIXEL_USART_MODULE->SR, USART_SR_RXNE);
 		const uint8_t byte = DYNAMIXEL_USART_MODULE->DR; // grab the byte from the data register
 		receiveBufferEnd++;
 		if (receiveBufferEnd >= receiveBuffer + REC_BUFFER_LEN)

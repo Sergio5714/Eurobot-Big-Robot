@@ -1,5 +1,6 @@
 #ifndef __MATR
 #define __MATR
+#include <math.h>
 
  typedef struct  {
 	float x;
