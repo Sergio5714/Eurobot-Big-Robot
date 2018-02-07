@@ -3,10 +3,6 @@
 Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 Servo_Checker_Typedef servoChecker[NUMBER_OF_MANIPULATORS];
 
-uint32_t ticksTemp;
-uint32_t ticksDelta;
-float time;
-
 // Task sequence for taking a cube
 Manipulator_Subtasks_Typedef takeCubetaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR,
                                                   SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR,
@@ -19,21 +15,24 @@ Manipulator_Subtasks_Typedef takeLastCubetaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, 
 Manipulator_Subtasks_Typedef unloadTowertaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR, 
                                                      SUBTASK_LIFT_MANIPULATOR, SUBTASK_TERMINATOR};
 
+uint32_t ticks;
+uint32_t deltaticks;
 // Timer interrupt handler for servoChecker
 void TIM5_IRQHandler(void)
 {
+
 	if (SERVO_CHECKER_TIM_MODULE->SR & TIM_SR_UIF)
 	{	
 		timClearStatusRegisterFlag(SERVO_CHECKER_TIM_MODULE, TIM_SR_UIF);
-		
+		ticks = SERVO_CHECKER_TIM_MODULE->CNT;
 		// Check manipulators
 		execManipTasks(0x00, &cubeManipulators[0]);
-		checkPosServo(&servoChecker[0]);
 		execManipTasks(0x01, &cubeManipulators[1]);
-		checkPosServo(&servoChecker[1]);
 		execManipTasks(0x02, &cubeManipulators[2]);
+		checkPosServo(&servoChecker[0]);
+		checkPosServo(&servoChecker[1]);
 		checkPosServo(&servoChecker[2]);
-		
+		deltaticks = SERVO_CHECKER_TIM_MODULE->CNT - ticks;
 	}
 	return;
 }
@@ -115,7 +114,7 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 	{	
 		// buffer for current angle and torgue
 		float angle;
-		uint16_t torgue;
+//		uint16_t torgue;
 		
 		// Increment number of time periods
 		servoChecker->numberOfTimerPeriods++;
@@ -127,21 +126,21 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 			return;
 		}
 		
-		// Read current load of the servo
-		if (!getServoLoadWithRetries(servoChecker->servoId, &torgue))
-		{
-			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_RETRIES_EXCEEDED;
-			return;
-		}
+//		// Read current load of the servo
+//		if (!getServoLoadWithRetries(servoChecker->servoId, &torgue))
+//		{
+//			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_RETRIES_EXCEEDED;
+//			return;
+//		}
 
-		// Check if current load is normal
-		if (torgue >= SERVO_CHECKER_MAX_LOAD)
-		{
-			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_LOAD_EXCEEDED;
-			// Return servo to previous position
-			setServoAngleWithRetries(servoChecker->servoId, servoChecker->previousPos);
-			return;
-		}
+//		// Check if current load is abnormal
+//		if (torgue >= SERVO_CHECKER_MAX_LOAD)
+//		{
+//			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_LOAD_EXCEEDED;
+//			// Return servo to previous position
+//			setServoAngleWithRetries(servoChecker->servoId, servoChecker->previousPos);
+//			return;
+//		}
 		
 		// Check if servo reached target position
 		if (fabs(servoChecker->targetPos - angle) < SERVO_CHECKER_ANGLE_EPS)
@@ -178,9 +177,13 @@ void execManipTasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 			case SERVO_CHECKER_WAITING_MODE:
 				// First command
 				execManipSubtasks(number, manipulator);
+				// Extend timer
+				timEnable(SERVO_CHECKER_TIM_MODULE);
 				break;
 			case SERVO_CHECKER_ACTIVE_MODE:
 				// Wait for servo checker
+				// Extend timer
+				timEnable(SERVO_CHECKER_TIM_MODULE);
 				break;
 			case SERVO_CHECKER_SUCCESFUL_CONFIRMATION:
 				// Check if all subtasks were executed
@@ -307,5 +310,7 @@ void setManipHighLevelCommand(Manipulator_Command_Typedef command, uint8_t numbe
 	}
 	// Set flag for task sequence execution
 	manipulator->subtasksExecutorStatusFlag = TASKS_EXECUTOR_ACTIVE_MODE;
+	// Turn timer on
+	timEnable(SERVO_CHECKER_TIM_MODULE);
 	return;
 }

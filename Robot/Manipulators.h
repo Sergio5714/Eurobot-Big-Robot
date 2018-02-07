@@ -38,8 +38,8 @@ typedef enum
 #define SERVO_CHECKER_ANGLE_EPS              1.0f
 #define SERVO_CHECKER_MAX_READ_REQUESTS      0x0A
 // Maximum timeout in Timer's periods
-#define SERVO_CHECKER_MAX_TIMEOUT            0x0F
-#define SERVO_CHECKER_MAX_LOAD               0x3E8
+#define SERVO_CHECKER_MAX_TIMEOUT            0x96  // 150
+#define SERVO_CHECKER_MAX_LOAD               0x401 // 1025
 
 // Checker status
 typedef enum
