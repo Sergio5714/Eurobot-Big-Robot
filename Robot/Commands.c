@@ -148,10 +148,6 @@ void checkCommandAndExecute()
 			}
 			// Send Answer of 4 float (12 bytes)
 			sendAnswer(inputCommand.command, (__packed uint8_t*)coordBuf, 0x0C);
-			for (i = 0x00; i < 0x03; i++)
-			{
-				robotCoordCs1[i] = 0;
-			}
 			break;
 		}
 		case SET_ANGLE_DNMX:
@@ -257,6 +253,25 @@ void checkCommandAndExecute()
 				break;
 			uint8_t number = inputCommand.params[0];
 			setManipHighLevelCommand(UNLOAD_TOWER_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case ODOMETRY_MOVEMENT:
+		{
+			// Check if 6 float numbers or 24 bytes are received
+			if (inputCommand.numberOfreceivedParams != 0x18)
+				break;
+			uint8_t i;
+			float distance[3];
+			float speed[3];
+			for (i = 0x00; i < 0x03; i++)
+			{
+				distance[i] = *(__packed float*)(inputCommand.params + 0x04*i);
+				speed[i] = *(__packed float*)(inputCommand.params + 0x04*i + 0x0C);
+			}
+			startMovementRobotCs1(&distance[0], &speed[0]);
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);

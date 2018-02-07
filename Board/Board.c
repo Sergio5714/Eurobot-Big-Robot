@@ -141,6 +141,9 @@ void boardInitAll()
 	timSettings.TIM_Prescaler = SERVO_CHECKER_TIM_PSC;
 	timInitBase(SERVO_CHECKER_TIM_MODULE, &timSettings);
 	
+	// Set one pulse mode
+	timSetOnePulseMode(SERVO_CHECKER_TIM_MODULE);
+	
 	// Update interrupt enable
 	timInterruptEnable(SERVO_CHECKER_TIM_MODULE, TIM_DIER_UIE);
 	
@@ -174,11 +177,14 @@ void boardInitAll()
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
 	__NVIC_EnableIRQ(MOTOR_CONTROL_IRQN);
 	__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
+	
 	// Priority
 	__NVIC_SetPriority(COM_USART_IRQN, 0X00);
 	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X01);
 	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X03);
 	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X02);
+	
 	// Global enable
 	__enable_irq();
+	return;
 }

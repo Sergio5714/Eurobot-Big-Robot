@@ -16,6 +16,8 @@
 // Common robot parameters
 #define ROBOT_NUMBER_OF_MOTORS         0x04
 
+//--------------------------------------------- Definitions for motors -----------------------------------------//
+
 // For SetMotorSpeed function to convert speed in rad/s to duty cycle (PWM)
 // PWM = A*speed + B
 #define ESCON_CALIBR_COEF_A            0.0293824f
@@ -44,10 +46,15 @@
 #define TICKS_TO_SPEED_COEF_LONG       2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
 #define TICKS_TO_SPEED_COEF_SHORT      2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
 
+//--------------------------------------------- Definitions for robot movement ---------------------------------//
+#define MOVEMENT_ANGULAR_ACCURACY      0.017445 // 1°
+#define MOVEMENT_XY_ACCURACY           0.001    // 1 mm
+
 typedef struct 
 {
 	uint8_t movingStatusFlag;
 	uint8_t forwardKinCalcStatusFlag;
+	uint8_t odometryMovingStatusFlag;
 }RobotStatus;
 
 // For setMotorSpeed function
@@ -84,6 +91,10 @@ void setMotorSpeed(uint8_t motorNumber, float speed);
 
 // Set speeds for all motors (target motor speeds)
 void setMotorSpeeds(void);
+
+//--------------------------------------------- Functions for movement -----------------------------------------//
+void startMovementRobotCs1(float* distance, float* speed);
+void checkIfPositionIsReached(void);
 
 //--------------------------------------------- Other functions ------------------------------------------------//
 

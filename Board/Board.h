@@ -122,9 +122,9 @@
 
 //--------------------------------------------- Timer for manipulators control (10 Hz) ----------------------------------------//
 
-// ARR = 42000, PSC = 200, fapb1 = 42 MHZ, PWM frequency = 10 Hz
+// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, PWM frequency = 10 Hz
 #define SERVO_CHECKER_TIM_MODULE         TIM5
-#define SERVO_CHECKER_TIM_PSC            0xC8
+#define SERVO_CHECKER_TIM_PSC            0x14
 #define SERVO_CHECKER_TIM_ARR            0xA410
 #define SERVO_CHECKER_IRQN               TIM5_IRQn
 #define SERVO_CHECKER_PERIOD             0.1f

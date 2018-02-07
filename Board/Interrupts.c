@@ -20,6 +20,12 @@ void TIM6_DAC_IRQHandler(void)
 			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
 			setMotorSpeeds();
 		}
+		
+		if (Robot.odometryMovingStatusFlag)
+		{
+			// Check if we reached target position or not
+			checkIfPositionIsReached();
+		}
 		// Update robot status
 		updateRobotStatus();
 	}

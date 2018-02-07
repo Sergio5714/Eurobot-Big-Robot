@@ -21,6 +21,10 @@ float robotCoordCs1[3];
 float robotTargetSpeedCs1[3];
 float robotTargetMotorSpeedCs1[ROBOT_NUMBER_OF_MOTORS];
 
+// Target coordinate difference for odometry movement mode
+float robotTargetDistanceCs1[3];
+float accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
+
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
 // Calculate robot speed and coordinates in global coordinate system by using speeds in robot's coordinate system
@@ -193,7 +197,62 @@ void setMotorSpeeds(void)
 	return;
 }
 
+//--------------------------------------------- Functions for movement -----------------------------------------//
+void startMovementRobotCs1(float* distance, float* speed)
+{
+	uint8_t i;
+	for (i = 0x00; i < 0x03; i++)
+	{
+		// Check if distance is non equal to 0
+		if ((distance[i] != 0.0f)&&(speed[i] > 0.0f))
+		{
+			if (distance[i] > 0)
+			{
+				robotTargetSpeedCs1[i] = speed[i];
+			}
+			else
+			{
+				robotTargetSpeedCs1[i] = -speed[i];
+			}
+		}
+		else
+		{
+			robotTargetSpeedCs1[i] = 0.0f;
+		}
+	}
+	// Clear coordinates in robot's coordinate system and set distances to pass
+	for (i = 0x00; i < 0x03; i++)
+	{
+		robotCoordCs1[i] = 0.0f;
+		robotTargetDistanceCs1[i] = distance[i];
+	}
+	
+	// Optimize direction of robots rotation
+	if (robotTargetDistanceCs1[2] > PI_NUMBER)
+	{
+		robotTargetSpeedCs1[2] = -speed[2];
+	}
+	
+	Robot.odometryMovingStatusFlag = 0x01;
+	return;
+}
 
+void checkIfPositionIsReached(void)
+{
+	uint8_t i;
+	for (i = 0x00; i < 0x03; i++)
+	{
+		if (fabs(robotTargetDistanceCs1[i] - robotCoordCs1[i]) < accuracyOfMovement[i])
+		{
+			robotTargetSpeedCs1[i] = 0.0;
+		}
+		else
+		{
+			Robot.odometryMovingStatusFlag = 0x01;
+		}
+	}
+	return;
+}
 //--------------------------------------------- Other functions ------------------------------------------------//
 
 // Check status

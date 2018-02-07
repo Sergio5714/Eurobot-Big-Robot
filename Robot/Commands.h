@@ -40,6 +40,8 @@ enum
 	TAKE_CUBE                  = 0xB0,
 	UNLOAD_TOWER               = 0xB1,
 	
+	ODOMETRY_MOVEMENT          = 0xA2,
+	
 };
 
 void checkCommandAndExecute(void);

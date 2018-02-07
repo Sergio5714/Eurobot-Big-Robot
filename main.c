@@ -3,6 +3,7 @@
 #include "Communication.h"
 #include "Manipulators.h"
 
+extern RobotStatus Robot;
 uint32_t numberOfReceivedPackages;
 uint32_t numberOfChecksumErrors;
 uint32_t numberOfSmallLengthErrors;
@@ -11,6 +12,7 @@ int main()
 {		
  	boardInitAll();
 	initManipulators();
+	Robot.forwardKinCalcStatusFlag = 0x01;
 	while (1)
 	{
 		switch(getPackage())
