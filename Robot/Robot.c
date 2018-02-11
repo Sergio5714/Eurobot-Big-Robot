@@ -3,6 +3,9 @@
 // Struct for current robot status 
 RobotStatus Robot;
 
+// Struct for odometry movement
+OdometryMovementStruct OdometryMovement;
+
 // Values, calculated by using encoder's data
 // Speeds (rad/s) and coordinates (rad) of particular wheel
 float wheelsSpeed[ROBOT_NUMBER_OF_MOTORS];
@@ -21,9 +24,9 @@ float robotCoordCs1[3];
 float robotTargetSpeedCs1[3];
 float robotTargetMotorSpeedCs1[ROBOT_NUMBER_OF_MOTORS];
 
-// Target coordinate difference for odometry movement mode
-float robotTargetDistanceCs1[3];
+// Accuracy of movement and acceleration for odometry movement
 float accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
+float acceleration[3] = {ODOMETRY_MOVEMENT_ACCELERATION_XY, ODOMETRY_MOVEMENT_ACCELERATION_XY, ODOMETRY_MOVEMENT_ACCELERATION_W};
 
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
@@ -192,7 +195,7 @@ void setMotorSpeeds(void)
 	uint8_t i;
 	for(i = 0; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
-	setMotorSpeed(i + 0x01, robotTargetMotorSpeedCs1[i]);
+		setMotorSpeed(i + 0x01, robotTargetMotorSpeedCs1[i]);
 	}
 	return;
 }
@@ -203,54 +206,184 @@ void startMovementRobotCs1(float* distance, float* speed)
 	uint8_t i;
 	for (i = 0x00; i < 0x03; i++)
 	{
-		// Check if distance is non equal to 0
-		if ((distance[i] != 0.0f)&&(speed[i] > 0.0f))
+		// 1 Check if distance is non equal to 0
+		if ((distance[i] != 0.0f) && (speed[i] > 0.0f))
 		{
 			if (distance[i] > 0)
 			{
-				robotTargetSpeedCs1[i] = speed[i];
+				OdometryMovement.stableSpeed[i] = speed[i];
+				OdometryMovement.acceleration[i] = acceleration[i];
+				OdometryMovement.direction[i] = 1;
 			}
 			else
 			{
-				robotTargetSpeedCs1[i] = -speed[i];
+				OdometryMovement.stableSpeed[i] = -speed[i];
+				OdometryMovement.acceleration[i] = -acceleration[i];
+				OdometryMovement.direction[i] = -1;
 			}
+			
+			// 2 Set current coordinate in own system to 0
+			robotCoordCs1[i] = 0.0f;
+			
+			// 3 Copy distance to be passed
+			OdometryMovement.robotTargetDistanceCs1[i] = distance[i];
+			
+			// 4 Optimize direction of robots rotation and angle
+			if (i == 0x02)
+			{
+				if (fabs(distance[i]) > 2 * PI_NUMBER)
+				{
+					return;
+				}
+				
+				// Normalize angle
+				normalizeAngle(&distance[i]);
+				
+				if (distance[i] > PI_NUMBER)
+				{
+					OdometryMovement.robotTargetDistanceCs1[i] = distance[i] -  2 * PI_NUMBER;
+					OdometryMovement.acceleration[i] = -acceleration[i];
+					OdometryMovement.stableSpeed[i] = -speed[i];
+					OdometryMovement.direction[i] = -1;
+				}
+				else
+				{
+					OdometryMovement.robotTargetDistanceCs1[i] = distance[i];
+					OdometryMovement.acceleration[i] = acceleration[i];
+					OdometryMovement.stableSpeed[i] = speed[i];
+					OdometryMovement.direction[i] = 1;
+				}
+			}
+			
+			// 5 Calculate speed increment after all direction are defined
+			OdometryMovement.speedIncrement[i] = OdometryMovement.acceleration[i] * MOTOR_CONTROL_PERIOD;
+			
+			// 6 Calculation of essential parameters of the trajectory
+			calculateTrajectParameters(i);
+			
+			OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_ACCELERATION;
 		}
-		else
-		{
-			robotTargetSpeedCs1[i] = 0.0f;
-		}
-	}
-	// Clear coordinates in robot's coordinate system and set distances to pass
-	for (i = 0x00; i < 0x03; i++)
-	{
-		robotCoordCs1[i] = 0.0f;
-		robotTargetDistanceCs1[i] = distance[i];
-	}
-	
-	// Optimize direction of robots rotation
-	if (robotTargetDistanceCs1[2] > PI_NUMBER)
-	{
-		robotTargetSpeedCs1[2] = -speed[2];
 	}
 	
 	Robot.odometryMovingStatusFlag = 0x01;
 	return;
 }
+void calculateTrajectParameters(uint8_t i)
+{
+	float deltaCoord = OdometryMovement.direction[i] * OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] / (0x02 * acceleration[i]);
+	// Point of trajectory to stop acceleration
+	OdometryMovement.stopAccCoordinate[i] = deltaCoord;
+	// Point of trajectory to start decceleration
+	OdometryMovement.startDeccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] - deltaCoord;
+	
+	// If distance is too short, then correct stable speed
+	if (fabs(OdometryMovement.startDeccCoordinate[i]) < fabs(OdometryMovement.stopAccCoordinate[i]))
+	{
+		OdometryMovement.stableSpeed[i] = OdometryMovement.direction[i] * sqrt(OdometryMovement.acceleration[i] * OdometryMovement.robotTargetDistanceCs1[i]);
+		OdometryMovement.stopAccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] / 2;
+		OdometryMovement.startDeccCoordinate[i] = OdometryMovement.stopAccCoordinate[i];
+	}
+	return;
 
-void checkIfPositionIsReached(void)
+}
+void speedRecalculation(void)
 {
 	uint8_t i;
 	for (i = 0x00; i < 0x03; i++)
 	{
-		if (fabs(robotTargetDistanceCs1[i] - robotCoordCs1[i]) < accuracyOfMovement[i])
+		switch(OdometryMovement.odometryMovementStatusFlag[i])
 		{
-			robotTargetSpeedCs1[i] = 0.0;
-		}
-		else
-		{
-			Robot.odometryMovingStatusFlag = 0x01;
+			case ODOMETRY_MOVEMENT_NO_MOVEMENT:
+				break;
+			
+			case ODOMETRY_MOVEMENT_ACCELERATION:
+				robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.acceleration[i] * MOTOR_CONTROL_PERIOD;
+				// Constrain increase in speed if coordinate is still less than stopAccCoord[i]
+				if (fabs(robotTargetSpeedCs1[i]) > fabs(OdometryMovement.stableSpeed[i]))
+				{
+					robotTargetSpeedCs1[i] = OdometryMovement.stableSpeed[i];
+				}					
+				break;
+				
+			case ODOMETRY_MOVEMENT_STABLE_SPEED:
+				
+				// Keep constant speed
+				robotTargetSpeedCs1[i] = OdometryMovement.stableSpeed[i];
+				break;
+			
+			case ODOMETRY_MOVEMENT_DECCELERATION:
+				// Check if speed is less than spee increment
+				if (fabs(robotTargetSpeedCs1[i]) < fabs(OdometryMovement.speedIncrement[i]))
+				{
+					robotTargetSpeedCs1[i] = 0.0f;
+				}
+				else
+				{
+					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] - OdometryMovement.speedIncrement[i];
+				}	
+				break;
 		}
 	}
+	return;
+}
+// Check if we reached target position is reached or not
+void checkIfPositionIsReached(void)
+{
+	uint8_t i;
+	float robotCoordBuf[3];
+	
+	// Copy coordinates from robotCoordCs1[i] to robotCoordBuf[i]
+	for (i = 0x00; i < 0x03; i++)
+	{
+		robotCoordBuf[i] = robotCoordCs1[i];
+	}
+	// Change representation of angle if it is needed
+	if (robotCoordBuf[2] > PI_NUMBER)
+	{
+		robotCoordBuf[2] = robotCoordBuf[2] - 2 * PI_NUMBER;
+	}
+	
+	for (i = 0x00; i < 0x03; i++)
+	{
+		if (OdometryMovement.odometryMovementStatusFlag[i] != ODOMETRY_MOVEMENT_NO_MOVEMENT)
+		{
+			// Check if we reached final position or not
+			if (fabs(OdometryMovement.robotTargetDistanceCs1[i] - robotCoordBuf[i]) < accuracyOfMovement[i])
+			{
+				// Stop motors
+				robotTargetSpeedCs1[i] = 0.0;
+				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_NO_MOVEMENT;
+				return;
+			}
+			else
+			{
+				Robot.odometryMovingStatusFlag = 0x01;
+			}
+			// Check if mode should be changed
+			if ((fabs(robotCoordBuf[i]) < fabs(OdometryMovement.stopAccCoordinate[i])) && (fabs(robotSpeedCs1[i]) < fabs(OdometryMovement.stableSpeed[i])))
+			{
+				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_ACCELERATION;
+				return;
+			}
+			else if (fabs(robotCoordBuf[i]) < fabs(OdometryMovement.startDeccCoordinate[i]))
+			{
+				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_STABLE_SPEED;
+				return;
+			}
+			else
+			{
+				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_DECCELERATION;
+			}
+		}
+	}
+	return;
+}
+
+void initOdometryMovement(void)
+{
+	OdometryMovement.acceleration[0] = ODOMETRY_MOVEMENT_ACCELERATION_XY;
+	OdometryMovement.acceleration[1] = ODOMETRY_MOVEMENT_ACCELERATION_XY;
+	OdometryMovement.acceleration[2] = ODOMETRY_MOVEMENT_ACCELERATION_W;
 	return;
 }
 //--------------------------------------------- Other functions ------------------------------------------------//
