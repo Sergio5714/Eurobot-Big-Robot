@@ -46,10 +46,34 @@
 #define TICKS_TO_SPEED_COEF_LONG       2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
 #define TICKS_TO_SPEED_COEF_SHORT      2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS * MOTOR_CONTROL_PERIOD)
 
-//--------------------------------------------- Definitions for robot movement ---------------------------------//
-#define MOVEMENT_ANGULAR_ACCURACY      0.017445 // 1°
-#define MOVEMENT_XY_ACCURACY           0.001    // 1 mm
+//--------------------------------------------- Definitions and typedefs for robot movement --------------------//
+#define MOVEMENT_ANGULAR_ACCURACY          0.0087266f // 0.5°
+#define MOVEMENT_XY_ACCURACY               0.001f     // 1 mm
+#define ODOMETRY_MOVEMENT_ACCELERATION_XY  1.5f       // 1 m/s^2
+#define ODOMETRY_MOVEMENT_ACCELERATION_W   3.0f       // 1 rad/s^2
 
+typedef enum
+{
+	ODOMETRY_MOVEMENT_NO_MOVEMENT,
+	ODOMETRY_MOVEMENT_ACCELERATION,
+	ODOMETRY_MOVEMENT_STABLE_SPEED,
+	ODOMETRY_MOVEMENT_DECCELERATION,
+}Odometry_Movement_Status_Typedef;
+
+typedef struct 
+{
+	Odometry_Movement_Status_Typedef  odometryMovementStatusFlag[3];
+	float                             acceleration[3];
+	float                             stableSpeed[3];
+	float                             finalSpeed[3];
+	float                             speedIncrement[3];
+	float                             stopAccCoordinate[3];
+	float                             startDeccCoordinate[3];
+	float                             robotTargetDistanceCs1[3];
+	int8_t                            direction[3];
+}OdometryMovementStruct;
+
+//--------------------------------------------- External variables ---------------------------------------------//
 typedef struct 
 {
 	uint8_t movingStatusFlag;
@@ -93,9 +117,13 @@ void setMotorSpeed(uint8_t motorNumber, float speed);
 void setMotorSpeeds(void);
 
 //--------------------------------------------- Functions for movement -----------------------------------------//
-void startMovementRobotCs1(float* distance, float* speed);
-void checkIfPositionIsReached(void);
 
+void startMovementRobotCs1(float* distance, float* speed);
+// Inner function
+void calculateTrajectParameters(uint8_t coordinateNumber);
+void speedRecalculation(void);
+void checkIfPositionIsReached(void);
+void initOdometryMovement(void);
 //--------------------------------------------- Other functions ------------------------------------------------//
 
 // Check status

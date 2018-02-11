@@ -13,18 +13,22 @@ void TIM6_DAC_IRQHandler(void)
 		// Calculate global speed and coordinate (robotSpeedCs1 -> robotSpeedCsGlobal (+ robotCoordCsGlobal))
 		calcGlobSpeedAndCoord();
 		
+		// Odometry Movement
+		if (Robot.odometryMovingStatusFlag)
+		{
+			// Check if we reached target position or not
+			checkIfPositionIsReached();
+			// Calculate speed for current moment
+			speedRecalculation();
+		}
+		
+		// Calculation of forward kinematics
 		if (Robot.forwardKinCalcStatusFlag)
 		{
 			// Calculate Forward kinematics ( robotTargetSpeedCs1 -> robotTargetMotorSpeedCs1)
 			calcForwardKin();
 			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
 			setMotorSpeeds();
-		}
-		
-		if (Robot.odometryMovingStatusFlag)
-		{
-			// Check if we reached target position or not
-			checkIfPositionIsReached();
 		}
 		// Update robot status
 		updateRobotStatus();

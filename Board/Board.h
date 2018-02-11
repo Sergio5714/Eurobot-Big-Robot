@@ -112,7 +112,7 @@
 
 //--------------------------------------------- Timer for motor control (100 Hz) ------------------------------------------------//
 
-// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, PWM frequency = 100 Hz
+// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, Frequency = 100 Hz
 #define MOTOR_CONTROL_TIM_MODULE         TIM6
 #define MOTOR_CONTROL_TIM_PSC            0x14
 #define MOTOR_CONTROL_TIM_ARR            0xA410
@@ -120,14 +120,14 @@
 #define MOTOR_CONTROL_PERIOD             0.01f
 #define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
 
-//--------------------------------------------- Timer for manipulators control (10 Hz) ----------------------------------------//
+//--------------------------------------------- Timer for manipulators control (100 Hz) ----------------------------------------//
 
-// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, PWM frequency = 10 Hz
+// ARR = 42000, PSC = 20, fapb1 = 42 MHZ, Frequency = 100 Hz
 #define SERVO_CHECKER_TIM_MODULE         TIM5
 #define SERVO_CHECKER_TIM_PSC            0x14
 #define SERVO_CHECKER_TIM_ARR            0xA410
 #define SERVO_CHECKER_IRQN               TIM5_IRQn
-#define SERVO_CHECKER_PERIOD             0.1f
+#define SERVO_CHECKER_PERIOD             0.01f
 #define SERVO_CHECKER_TICKS_TO_SEC       0.00000238f
 
 //--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
