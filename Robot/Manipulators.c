@@ -279,6 +279,8 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 	servoChecker[number].targetPos = servoTargetPos;
 	servoChecker[number].previousPos = servoCurrentPos;
 	servoChecker[number].statusFlag = SERVO_CHECKER_ACTIVE_MODE;
+	// Extend timer
+	timEnable(SERVO_CHECKER_TIM_MODULE);
 	return;
 }
 

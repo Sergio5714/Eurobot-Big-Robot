@@ -9,6 +9,7 @@ extern float robotTargetSpeedCs1[3];
 extern float robotSpeedCs1[3];
 extern float robotCoordCs1[3];
 extern float robotCoordCsGlobal[3];
+extern float accelerationMax[3];
 extern Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 
 enum

@@ -25,8 +25,8 @@ float robotTargetSpeedCs1[3];
 float robotTargetMotorSpeedCs1[ROBOT_NUMBER_OF_MOTORS];
 
 // Accuracy of movement and acceleration for odometry movement
-float accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
-float acceleration[3] = {ODOMETRY_MOVEMENT_ACCELERATION_XY, ODOMETRY_MOVEMENT_ACCELERATION_XY, ODOMETRY_MOVEMENT_ACCELERATION_W};
+float const accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
+float const accelerationMax[3] = {ODOMETRY_MOVEMENT_ACCELERATION_X, ODOMETRY_MOVEMENT_ACCELERATION_Y, ODOMETRY_MOVEMENT_ACCELERATION_W};
 
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
@@ -80,17 +80,17 @@ void readEnc(void)
 	{
 		// Actually now it is only motor's speed, but not wheel speed
 		wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT;
-		// Now one motor (1st and 3rd) is especial (20.12.2017)
-		if ((i == 0) || (i == 2))
+		// Now one motor (1st and 4rd) is especial (20.02.2018)
+		if ((i == 0) || (i == 3))
 		{
 			wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG;	
 		}
 	}
 	#endif
 	
-	// Inverse motors 2 and 4 because of cylindrical transmission (Positive direction is CCW)
+	// Inverse motors 2 and 3 because of cylindrical transmission (Positive direction is CCW)
 	wheelsSpeed[1] = - wheelsSpeed[1];
-	wheelsSpeed[3] = - wheelsSpeed[3];
+	wheelsSpeed[2] = - wheelsSpeed[2];
 	
 	// Calculate distance that wheel passed
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
@@ -100,6 +100,7 @@ void readEnc(void)
 	
 	// Calculate inverse kinematics (wheelsSpeed -> robotSpeedCs1)
 	calcInverseKin();
+	
 	// Calculate instanteneous coordinates in robot cpprdinate system
 	for (i = 0x00; i < 0x03; i++)
 	{
@@ -108,6 +109,8 @@ void readEnc(void)
 	normalizeAngle(&robotCoordCs1[2]);
 	return;
 }
+
+//--------------------------------------------- Functions for calculation of kinematics ------------------------//
 
 // Calculate forward kinematics (from speeds in robot's coordinate system to motors' speed)
 void calcForwardKin(void)
@@ -141,6 +144,40 @@ void calcForwardKin(void)
 	matrixMultiplyS2M(&vSum[0], ROBOT_NUMBER_OF_MOTORS, 1, correctionCoef, &robotTargetMotorSpeedCs1[0]);
 	return;
 }
+
+// Check saturation of motors and change speeds if it is needed (speeds in robot's coordinate system)
+void checkSaturation( float* targetSpeed)
+{
+	float vLine[ROBOT_NUMBER_OF_MOTORS], vRot[ROBOT_NUMBER_OF_MOTORS], vSum[ROBOT_NUMBER_OF_MOTORS];
+	float maxMotorSpeed;
+	float correctionCoef;
+	
+	// Note : matrix of forward kinematics already takes into account 2 cylindrical transmissions (wheels 2 and 4)
+	// Calculate linear speed
+	matrixMultiplyM2M(&MLineSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, targetSpeed, 3, 1, vLine);
+	
+	// Calculate rotational speed
+	matrixMultiplyM2M(&MRotSpeed[0][0], ROBOT_NUMBER_OF_MOTORS, 3, targetSpeed, 3, 1, vRot);
+	
+	// Sum speeds
+	matrixPlusMinus(vLine, vRot, ROBOT_NUMBER_OF_MOTORS, 1, 1, vSum);
+	
+	// Find max value all motor's speeds
+	maxValue(vSum, ROBOT_NUMBER_OF_MOTORS, &maxMotorSpeed);
+	
+	// Check if we exceed maximum available motor speed
+	if (fabs(maxMotorSpeed) > MAX_ROT_SPEED)
+	{
+		correctionCoef = fabs(MAX_ROT_SPEED / maxMotorSpeed);
+	} 
+	else 
+	{
+		correctionCoef = 1.0;
+	}
+	matrixMultiplyS2M(targetSpeed, 0x03, 0x01, correctionCoef, targetSpeed);
+	return;
+}
+
 // Calculate inverse kinematics (from encoder's wheels' speeds to speeds in robot's coordinate system)
 void calcInverseKin(void)
 {
@@ -201,29 +238,75 @@ void setMotorSpeeds(void)
 }
 
 //--------------------------------------------- Functions for movement -----------------------------------------//
-void startMovementRobotCs1(float* distance, float* speed)
+
+// Start circular rotation with defined radius, length of arc and absolute linear speed
+void startCircularRotation( float radius, float arcLength, float linearSpeedAbs)
 {
+	if ((arcLength != 0.0f) && (linearSpeedAbs > 0.0f))
+	{
+		float distance[3] = {0.0f, 0.0f, 0.0f};
+		float speedAbs[3] = {0.0f, 0.0f, 0.0f};
+		float accelerationAbs[3] = {0.0f, 0.0f, 0.0f};
+		
+		// Set maximum possible x acceleration
+		accelerationAbs[1] = ODOMETRY_MOVEMENT_ACCELERATION_X;
+		// Set x stable speed
+		speedAbs[1] = linearSpeedAbs;
+		// Set x distance to be passed
+		distance[1] = arcLength;
+		
+		// Set maximum possible w acceleration
+		accelerationAbs[2] = accelerationAbs[1] / radius;
+		// Check if angular aceleration exceeds bounds
+		if (accelerationAbs[2] > ODOMETRY_MOVEMENT_ACCELERATION_W)
+		{
+			return;
+		}
+		// Set w stable speed
+		speedAbs[2] = linearSpeedAbs / radius;
+		// Set w distance to be passed
+		distance[2] = arcLength / radius;
+		
+		startMovementRobotCs1(distance, speedAbs, accelerationAbs);
+	}
+	return;
+}
+
+// Start predefined movement to particular distance in robot's coordinate system
+// Input accelerations are coorected inside functions in order to syncronize acceleration and decceleration 
+void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationAbs[3])
+{
+	// Counter
 	uint8_t i;
+	
+	// -1 Normalize speeds
+	checkSaturation(speedAbs);
+	
+	// 0 Normalize accelerations
+	syncAccelerations(distance, speedAbs, accelerationAbs);
+	
+	// Fill Odometry movement struct with appropriate values
 	for (i = 0x00; i < 0x03; i++)
 	{
-		// 1 Check if distance is non equal to 0
-		if ((distance[i] != 0.0f) && (speed[i] > 0.0f))
+		// 1 Set current coordinate in own system to 0
+		robotCoordCs1[i] = 0.0f;
+		
+		// 2 Check if distance is non equal to 0 and speed is more than 0
+		if ((distance[i] != 0.0f) && (speedAbs[i] > 0.0f))
 		{
 			if (distance[i] > 0)
 			{
-				OdometryMovement.stableSpeed[i] = speed[i];
-				OdometryMovement.acceleration[i] = acceleration[i];
+				OdometryMovement.stableSpeed[i] = speedAbs[i];
+				OdometryMovement.acceleration[i] = accelerationAbs[i];
 				OdometryMovement.direction[i] = 1;
 			}
 			else
 			{
-				OdometryMovement.stableSpeed[i] = -speed[i];
-				OdometryMovement.acceleration[i] = -acceleration[i];
+				
+				OdometryMovement.stableSpeed[i] = -speedAbs[i];
+				OdometryMovement.acceleration[i] = -accelerationAbs[i];
 				OdometryMovement.direction[i] = -1;
 			}
-			
-			// 2 Set current coordinate in own system to 0
-			robotCoordCs1[i] = 0.0f;
 			
 			// 3 Copy distance to be passed
 			OdometryMovement.robotTargetDistanceCs1[i] = distance[i];
@@ -231,6 +314,7 @@ void startMovementRobotCs1(float* distance, float* speed)
 			// 4 Optimize direction of robots rotation and angle
 			if (i == 0x02)
 			{
+				// Check if angle exceeds bounds
 				if (fabs(distance[i]) > 2 * PI_NUMBER)
 				{
 					return;
@@ -242,53 +326,98 @@ void startMovementRobotCs1(float* distance, float* speed)
 				if (distance[i] > PI_NUMBER)
 				{
 					OdometryMovement.robotTargetDistanceCs1[i] = distance[i] -  2 * PI_NUMBER;
-					OdometryMovement.acceleration[i] = -acceleration[i];
-					OdometryMovement.stableSpeed[i] = -speed[i];
+					OdometryMovement.acceleration[i] = -accelerationAbs[i];
+					OdometryMovement.stableSpeed[i] = -speedAbs[i];
 					OdometryMovement.direction[i] = -1;
 				}
 				else
 				{
 					OdometryMovement.robotTargetDistanceCs1[i] = distance[i];
-					OdometryMovement.acceleration[i] = acceleration[i];
-					OdometryMovement.stableSpeed[i] = speed[i];
+					OdometryMovement.acceleration[i] = accelerationAbs[i];
+					OdometryMovement.stableSpeed[i] = speedAbs[i];
 					OdometryMovement.direction[i] = 1;
 				}
 			}
 			
-			// 5 Calculate speed increment after all direction are defined
+			// 5 Set current speeds 
+			OdometryMovement.initialSpeed[i] = robotSpeedCs1[i];
+			
+			// 6 Calculate speed increment after all direction are defined
 			OdometryMovement.speedIncrement[i] = OdometryMovement.acceleration[i] * MOTOR_CONTROL_PERIOD;
 			
-			// 6 Calculation of essential parameters of the trajectory
-			calculateTrajectParameters(i);
+			// 7 Calculation of essential parameters of the trajectory
+			calculateTrajectParameters(i, accelerationAbs);
 			
 			OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_ACCELERATION;
 		}
 	}
-	
+	// 8 Set flag to make odometry movement
 	Robot.odometryMovingStatusFlag = 0x01;
 	return;
 }
-void calculateTrajectParameters(uint8_t i)
+
+// Inner function for calculation of points of accelleration and decceleration
+void calculateTrajectParameters(uint8_t i, float* accelerationAbs)
 {
-	float deltaCoord = OdometryMovement.direction[i] * OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] / (0x02 * acceleration[i]);
+	float deltaCoordAcc = OdometryMovement.direction[i] * (OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] - OdometryMovement.initialSpeed[i] * OdometryMovement.initialSpeed[i])
+	/ (0x02 * accelerationAbs[i]);
+	
+	float deltaCoordDecc = OdometryMovement.direction[i] * (OdometryMovement.stableSpeed[i] * OdometryMovement.stableSpeed[i] - OdometryMovement.finalSpeed[i] * OdometryMovement.finalSpeed[i])
+	/ (0x02 * accelerationAbs[i]);
+	
 	// Point of trajectory to stop acceleration
-	OdometryMovement.stopAccCoordinate[i] = deltaCoord;
+	OdometryMovement.stopAccCoordinate[i] = deltaCoordAcc;
+	
 	// Point of trajectory to start decceleration
-	OdometryMovement.startDeccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] - deltaCoord;
+	OdometryMovement.startDeccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] - deltaCoordDecc;
+	
 	
 	// If distance is too short, then correct stable speed
 	if (fabs(OdometryMovement.startDeccCoordinate[i]) < fabs(OdometryMovement.stopAccCoordinate[i]))
 	{
+		// TBD
 		OdometryMovement.stableSpeed[i] = OdometryMovement.direction[i] * sqrt(OdometryMovement.acceleration[i] * OdometryMovement.robotTargetDistanceCs1[i]);
 		OdometryMovement.stopAccCoordinate[i] = OdometryMovement.robotTargetDistanceCs1[i] / 2;
 		OdometryMovement.startDeccCoordinate[i] = OdometryMovement.stopAccCoordinate[i];
 	}
 	return;
-
 }
+
+// Inner function for syncronizing accelerations
+void syncAccelerations(float* distance, float* speedAbs, float* accelerationAbs)
+{
+	uint8_t i;
+	float accelTimes[3];
+	float maxAccelTime = 0;
+	
+	// Normalize accelerations
+	for (i = 0x00; i < 0x03; i++)
+	{
+		if ((distance[i] != 0.0f) && (speedAbs[i] > 0.0f))
+		{
+			// Calculatuion of time duration of acceleration process for each coordinate
+			accelTimes[i] = speedAbs[i] / accelerationAbs[i];
+			if (accelTimes[i] > maxAccelTime)
+			{
+				// Find maximum value of accelTimes[i] array to determine the "slowest" coordinate
+				maxAccelTime = accelTimes[i];
+			}
+		}
+	}
+	
+	// Calculate accelerations for each coordinate in order to obtain equal time of acceleration
+	for (i = 0x00; i < 0x03; i++)
+	{
+		accelerationAbs[i] = speedAbs[i] / maxAccelTime;
+	}
+	return;
+}
+
+// Speed recalculation based on current speed and coordinate in robot's coordinate system
 void speedRecalculation(void)
 {
 	uint8_t i;
+//	float deltaCoord;
 	for (i = 0x00; i < 0x03; i++)
 	{
 		switch(OdometryMovement.odometryMovementStatusFlag[i])
@@ -312,21 +441,35 @@ void speedRecalculation(void)
 				break;
 			
 			case ODOMETRY_MOVEMENT_DECCELERATION:
-				// Check if speed is less than spee increment
-				if (fabs(robotTargetSpeedCs1[i]) < fabs(OdometryMovement.speedIncrement[i]))
+				// Check if speed is less than speed increment
+				if (fabs(robotSpeedCs1[i]) < fabs(OdometryMovement.speedIncrement[i]))
 				{
-					robotTargetSpeedCs1[i] = 0.0f;
+					robotTargetSpeedCs1[i] = OdometryMovement.finalSpeed[i];
+					OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_NO_MOVEMENT;
+//					OdometryMovement.speedIncrement[i] = OdometryMovement.speedIncrement[i] / 2;
 				}
+				
+//				deltaCoord = (robotSpeedCs1[i] * robotSpeedCs1[i] - 
+//				OdometryMovement.finalSpeed[i] * OdometryMovement.finalSpeed[i]) / (2 * OdometryMovement.acceleration[i]);
+				
+				// Simple bang–bang controller
+//				if (fabs(OdometryMovement.robotTargetDistanceCs1[i] - robotCoordCs1[i]) - deltaCoord > accuracyOfMovement[i])
+//				{
+//					// We should increase speed a little bit
+//					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.speedIncrement[i] / 2;
+//				}
 				else
 				{
+					// Decrease speed
 					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] - OdometryMovement.speedIncrement[i];
-				}	
-				break;
+					break;
+				}
 		}
 	}
 	return;
 }
-// Check if we reached target position is reached or not
+// Function checks if we reached desired position or not and changes mode of movement
+// when we reach transition points
 void checkIfPositionIsReached(void)
 {
 	uint8_t i;
@@ -359,6 +502,7 @@ void checkIfPositionIsReached(void)
 			{
 				Robot.odometryMovingStatusFlag = 0x01;
 			}
+			
 			// Check if mode should be changed
 			if ((fabs(robotCoordBuf[i]) < fabs(OdometryMovement.stopAccCoordinate[i])) && (fabs(robotSpeedCs1[i]) < fabs(OdometryMovement.stableSpeed[i])))
 			{
@@ -379,13 +523,6 @@ void checkIfPositionIsReached(void)
 	return;
 }
 
-void initOdometryMovement(void)
-{
-	OdometryMovement.acceleration[0] = ODOMETRY_MOVEMENT_ACCELERATION_XY;
-	OdometryMovement.acceleration[1] = ODOMETRY_MOVEMENT_ACCELERATION_XY;
-	OdometryMovement.acceleration[2] = ODOMETRY_MOVEMENT_ACCELERATION_W;
-	return;
-}
 //--------------------------------------------- Other functions ------------------------------------------------//
 
 // Check status

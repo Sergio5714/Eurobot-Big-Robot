@@ -41,37 +41,37 @@
 // Initial value for TIM->CNT register (30000)
 #define ENCODER_CNT_INITIAL_VALUE        0x7530
 
-#define ENCODER_1_TIM_MODULE             TIM8
-#define ENCODER_1_CHA_PORT               GPIOC
-#define ENCODER_1_CHA_PIN                GPIO_Pin_7
-#define ENCODER_1_CHB_PORT               GPIOC
-#define ENCODER_1_CHB_PIN                GPIO_Pin_6
-#define ENCODER_1_PIN_AF                 GPIO_AF_TIM8
-#define ENCODER_1_CNT                    ((uint16_t *)&(ENCODER_1_TIM_MODULE->CNT))
+#define ENCODER_4_TIM_MODULE             TIM8
+#define ENCODER_4_CHA_PORT               GPIOC
+#define ENCODER_4_CHA_PIN                GPIO_Pin_7
+#define ENCODER_4_CHB_PORT               GPIOC
+#define ENCODER_4_CHB_PIN                GPIO_Pin_6
+#define ENCODER_4_PIN_AF                 GPIO_AF_TIM8
+#define ENCODER_4_CNT                    ((uint16_t *)&(ENCODER_4_TIM_MODULE->CNT))
 
-#define ENCODER_2_TIM_MODULE             TIM1
-#define ENCODER_2_CHA_PORT               GPIOE
-#define ENCODER_2_CHA_PIN                GPIO_Pin_11
-#define ENCODER_2_CHB_PORT               GPIOE
-#define ENCODER_2_CHB_PIN                GPIO_Pin_9
-#define ENCODER_2_PIN_AF                 GPIO_AF_TIM1
-#define ENCODER_2_CNT                    ((uint16_t *)&(ENCODER_2_TIM_MODULE->CNT))
-
-#define ENCODER_3_TIM_MODULE             TIM3
-#define ENCODER_3_CHA_PORT               GPIOA
-#define ENCODER_3_CHA_PIN                GPIO_Pin_6
-#define ENCODER_3_CHB_PORT               GPIOA
-#define ENCODER_3_CHB_PIN                GPIO_Pin_7
-#define ENCODER_3_PIN_AF                 GPIO_AF_TIM3
+#define ENCODER_3_TIM_MODULE             TIM1
+#define ENCODER_3_CHA_PORT               GPIOE
+#define ENCODER_3_CHA_PIN                GPIO_Pin_11
+#define ENCODER_3_CHB_PORT               GPIOE
+#define ENCODER_3_CHB_PIN                GPIO_Pin_9
+#define ENCODER_3_PIN_AF                 GPIO_AF_TIM1
 #define ENCODER_3_CNT                    ((uint16_t *)&(ENCODER_3_TIM_MODULE->CNT))
 
-#define ENCODER_4_TIM_MODULE             TIM2
-#define ENCODER_4_CHA_PORT               GPIOB
-#define ENCODER_4_CHA_PIN                GPIO_Pin_3
-#define ENCODER_4_CHB_PORT               GPIOA
-#define ENCODER_4_CHB_PIN                GPIO_Pin_15
-#define ENCODER_4_PIN_AF                 GPIO_AF_TIM2
-#define ENCODER_4_CNT                    ((uint16_t *)&(ENCODER_4_TIM_MODULE->CNT))
+#define ENCODER_2_TIM_MODULE             TIM3
+#define ENCODER_2_CHA_PORT               GPIOA
+#define ENCODER_2_CHA_PIN                GPIO_Pin_6
+#define ENCODER_2_CHB_PORT               GPIOA
+#define ENCODER_2_CHB_PIN                GPIO_Pin_7
+#define ENCODER_2_PIN_AF                 GPIO_AF_TIM3
+#define ENCODER_2_CNT                    ((uint16_t *)&(ENCODER_2_TIM_MODULE->CNT))
+
+#define ENCODER_1_TIM_MODULE             TIM2
+#define ENCODER_1_CHA_PORT               GPIOB
+#define ENCODER_1_CHA_PIN                GPIO_Pin_3
+#define ENCODER_1_CHB_PORT               GPIOA
+#define ENCODER_1_CHB_PIN                GPIO_Pin_15
+#define ENCODER_1_PIN_AF                 GPIO_AF_TIM2
+#define ENCODER_1_CNT                    ((uint16_t *)&(ENCODER_1_TIM_MODULE->CNT))
 
 //--------------------------------------------- Motor PWM control  --------------------------------------------------//
 

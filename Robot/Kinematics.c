@@ -4,22 +4,22 @@
 
 // Note : matrix of forward kinematics already takes into account 2 cylindrical transmissions (wheels 2 and 4)
 
-float MLineSpeed[4][3] = { 24.5351,  -24.7522,  0.0,  // forward linear matrix
-                           24.5351,   24.7522,  0.0,
-                           24.5351,   24.7522,  0.0,
-                           24.5351,  -24.7522,  0.0};
+float MLineSpeed[4][3] = { 24.04868127,   27.07752606,  0.0,  // forward linear matrix
+                           30.82350247,  -16.18349293,  0.0,
+                           30.82350247,   16.18349293,  0.0,
+                           24.04868127,  -27.07752606,  0.0};
 
 
-float MRotSpeed[4][3] = { 0.0,  0.0,  -5.6658,  // forward rotation matrix
-                          0.0,  0.0,   5.6658,
-                          0.0,  0.0,  -5.6658,
-                          0.0,  0.0,   5.6658};
+float MRotSpeed[4][3] = { 0.0,  0.0, -5.85666637,  // forward rotation matrix
+                          0.0,  0.0,  4.53981119,
+                          0.0,  0.0,  4.53981119,
+                          0.0,  0.0, -5.85666637};
 
 
 //For the third picture in the solution part
-float InverseKinematics[3][4] = { 0.01019, -0.01019,   0.01019,  -0.01019,  // inverse matrix
-                                 -0.01010, -0.01010,   0.01010,   0.01010,     
-                                 -0.04413,  -0.04413,   -0.04413,   -0.04413 };
+float InverseKinematics[3][4] = { 0.00783538, -0.01010818, -0.01010818,  0.00783538,  // inverse matrix
+                                  0.01360546,  0.00813161, -0.00813161, -0.01360546,     
+                                 -0.05319911, -0.04150626, -0.04150626, -0.05319911 };
 
 
 

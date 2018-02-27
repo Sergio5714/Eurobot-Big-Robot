@@ -10,9 +10,9 @@ uint32_t numberOfSmallLengthErrors;
 
 int main()
 {		
+
  	boardInitAll();
 	initManipulators();
-	initOdometryMovement();
 	Robot.forwardKinCalcStatusFlag = 0x01;
 	
 	while (1)

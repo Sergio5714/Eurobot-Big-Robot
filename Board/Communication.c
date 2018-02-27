@@ -18,6 +18,7 @@ uint32_t getBytesAvailable(const uint8_t* receiveBufferStart,const uint8_t* rece
 	else
 		return (comBufLength - (start - end));
 }
+
 // Check if there is a package in buffer
 Typedef_Protocol_Error getPackage()
 {

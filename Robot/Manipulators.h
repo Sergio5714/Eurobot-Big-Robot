@@ -102,33 +102,33 @@ typedef enum
 //--------------------------------------------- Macros for servos ------------------------------------------------//
 // P.S Left, right and central manipulators when we are in front of robot
 // ID of servo motors
-#define MANIP_RIGHT_SERVO_SLIDER_ID             0x01
+#define MANIP_RIGHT_SERVO_SLIDER_ID             0x01  // id = 1
 #define MANIP_RIGHT_SERVO_GRIPPER_ID            0x10  // id = 16
 
-#define MANIP_LEFT_SERVO_SLIDER_ID              0x02
+#define MANIP_LEFT_SERVO_SLIDER_ID              0x02  // id = 2
 #define MANIP_LEFT_SERVO_GRIPPER_ID             0x11  // id = 17
 
-#define MANIP_CENTRAL_SERVO_SLIDER_ID           0x03  // To be mounted (11.01.2018)
-#define MANIP_CENTRAL_SERVO_GRIPPER_ID          0x12  // To be mounted (11.01.2018)
+#define MANIP_CENTRAL_SERVO_SLIDER_ID           0x03  // id = 3 
+#define MANIP_CENTRAL_SERVO_GRIPPER_ID          0x12  // id = 18
 
 // Boundary angles
-#define MANIP_RIGHT_SERVO_SLIDER_TOP_POS        0x23  // 35°
+#define MANIP_RIGHT_SERVO_SLIDER_TOP_POS        0x2D  // 45°
 #define MANIP_RIGHT_SERVO_SLIDER_BOT_POS        0x12C // 300°
-#define MANIP_RIGHT_SERVO_SLIDER_INTERM_POS     0xFA  // 250°
-#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS    0x28  // 40°
-#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS    0x96  // 150°
+#define MANIP_RIGHT_SERVO_SLIDER_INTERM_POS     0xFA  // 250° TBD!
+#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS    0x104 // 260°
+#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS    0x8C  // 140°
 
-#define MANIP_LEFT_SERVO_SLIDER_TOP_POS         0x109 // 265°
-#define MANIP_LEFT_SERVO_SLIDER_BOT_POS         0x28  // 40°
-#define MANIP_LEFT_SERVO_SLIDER_INTERM_POS      0xC8  // 200°
-#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS     0xC8  // 200°
-#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS     0x12C // 300°
+#define MANIP_LEFT_SERVO_SLIDER_TOP_POS         0x104 // 260° TBD!
+#define MANIP_LEFT_SERVO_SLIDER_BOT_POS         0x00  // 0°   TBD!
+#define MANIP_LEFT_SERVO_SLIDER_INTERM_POS      0xC8  // 200° TBD!
+#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS     0x69  // 105°
+#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS     0xF5  // 245°
 
-#define MANIP_CENTRAL_SERVO_SLIDER_TOP_POS      0x2D  // TBD!
-#define MANIP_CENTRAL_SERVO_SLIDER_BOT_POS      0x12C // TBD!
-#define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS   0x12C // TBD!
-#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS  0x28  // TBD!
-#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS  0x96  // TBD!
+#define MANIP_CENTRAL_SERVO_SLIDER_TOP_POS      0x23  // 35°  
+#define MANIP_CENTRAL_SERVO_SLIDER_BOT_POS      0x10E // 270° 
+#define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS   0xC8  // 200° TBD!
+#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS  0x8C  // 140°
+#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS  0xF0  // 240°
 
 //--------------------------------------------- FUNCTIONS ------------------------------------------------------//
 void initManipulators(void);

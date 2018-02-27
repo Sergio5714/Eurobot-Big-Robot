@@ -266,12 +266,14 @@ void checkCommandAndExecute()
 			uint8_t i;
 			float distance[3];
 			float speed[3];
+			float acceleration[3];
 			for (i = 0x00; i < 0x03; i++)
 			{
 				distance[i] = *(__packed float*)(inputCommand.params + 0x04*i);
 				speed[i] = *(__packed float*)(inputCommand.params + 0x04*i + 0x0C);
+				acceleration[i] = accelerationMax[i];
 			}
-			startMovementRobotCs1(&distance[0], &speed[0]);
+			startMovementRobotCs1(&distance[0], &speed[0], &acceleration[0]);
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);
