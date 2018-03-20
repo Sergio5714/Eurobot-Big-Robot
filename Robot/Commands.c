@@ -217,21 +217,27 @@ void checkCommandAndExecute()
 			}
 			break;
 		}
-		case GET_STATUS:
+		case GET_ODOMETRY_MOVEMENT_STATUS:
 		{
-			// Check if coordinates (x, y and angle) is received. All together 12 bytes
-			if (inputCommand.numberOfreceivedParams != 0x0C)
+			// Check if there is no parameters
+			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
-			uint8_t buf [13];
-			uint8_t i;
-			buf[0] = Robot.movingStatusFlag;
-			__packed uint8_t* bufPtr = (__packed uint8_t*)robotCoordCs1;
-			for (i = 0x00; i < 0x0C; i++)
-			{
-				buf[i + 0x01] = *bufPtr;
-				bufPtr++;
-			}
-			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x0D);
+			uint8_t buf = Robot.odometryMovingStatusFlag;
+			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x01);
+			break;
+		}
+		case GET_MANIPULATOR_STATUS :
+		{
+			// Check if number of manipulator is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			// Check if number of manipulator is right
+			if (number > NUMBER_OF_MANIPULATORS - 0x01)
+				return;
+			uint8_t buf = cubeManipulators[number].subtasksExecutorStatusFlag; 
+			// Send status of manipulator
+			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x01);
 			break;
 		}
 		case TAKE_CUBE:
@@ -253,6 +259,73 @@ void checkCommandAndExecute()
 				break;
 			uint8_t number = inputCommand.params[0];
 			setManipHighLevelCommand(UNLOAD_TOWER_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case OPEN_CLOSE_DOOR:
+		{
+			// Check if manipulator's id and desired door state (0 or 1) is received
+			if (inputCommand.numberOfreceivedParams != 0x02)
+				break;
+			uint8_t number = inputCommand.params[0];
+			if (number == 0x01)
+			{
+				// Second manipulator has no door
+				return;
+			}
+			// Read state
+			uint8_t state = inputCommand.params[1];
+			if (state)
+			{
+				setManipHighLevelCommand(OPEN_DOOR_COMMAND, number, &cubeManipulators[number]);
+			}
+			else
+			{
+				setManipHighLevelCommand(CLOSE_DOOR_COMMAND, number, &cubeManipulators[number]);
+			}
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case LIFT_MANIPULATOR_TO_INTERM:
+		{
+			// Check if manipulator's number  is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			setManipHighLevelCommand(LIFT_TO_INTERMEDIATE_POS_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case RELEASE_MAGIC_CUBE:
+		{
+			// Check if manipulator's number  is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			if (number == 0x01)
+			{
+				// Second manipulator has no magic cube
+				return;
+			}
+			setManipHighLevelCommand(RELEASE_MAGIC_CUBE_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case TAKE_LAST_CUBE:
+		{
+			// Check if manipulator's number  is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			setManipHighLevelCommand(TAKE_LAST_CUBE_COMMAND, number, &cubeManipulators[number]);
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);

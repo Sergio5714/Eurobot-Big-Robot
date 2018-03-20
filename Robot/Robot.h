@@ -51,7 +51,7 @@
 #define MOVEMENT_ANGULAR_ACCURACY          0.0087266f // 0.5°
 #define MOVEMENT_XY_ACCURACY               0.0005f    // 0.5 mm
 #define ODOMETRY_MOVEMENT_ACCELERATION_X   1.5f       // 1.5 m/s^2
-#define ODOMETRY_MOVEMENT_ACCELERATION_Y   1.0f       // 1 m/s^2
+#define ODOMETRY_MOVEMENT_ACCELERATION_Y   0.5f       // 0.5 m/s^2
 #define ODOMETRY_MOVEMENT_ACCELERATION_W   6.0f       // 3 rad/s^2
 
 typedef enum
@@ -145,6 +145,9 @@ void speedRecalculation(void);
 // Function checks if we reached desired position or not and changes mode of movement
 // when we reach transition points
 void checkIfPositionIsReached(void);
+
+// Subfunction for checkIfPositionIsReached() function
+void checkIfPositionIsReachedCoord(uint8_t numberOfManipulator, float* robotCoordBuf);
 
 //--------------------------------------------- Other functions ------------------------------------------------//
 

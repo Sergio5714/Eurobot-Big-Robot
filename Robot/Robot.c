@@ -488,7 +488,28 @@ void checkIfPositionIsReached(void)
 	
 	for (i = 0x00; i < 0x03; i++)
 	{
-		if (OdometryMovement.odometryMovementStatusFlag[i] != ODOMETRY_MOVEMENT_NO_MOVEMENT)
+		// Check if each particular coordinate is reached and if it is needed to change mode
+		checkIfPositionIsReachedCoord(i, robotCoordBuf);
+	}
+	
+	// Change status flag if we finished odometry movement
+	if ((OdometryMovement.odometryMovementStatusFlag[0] == ODOMETRY_MOVEMENT_NO_MOVEMENT) &&
+		(OdometryMovement.odometryMovementStatusFlag[1] == ODOMETRY_MOVEMENT_NO_MOVEMENT) &&
+		(OdometryMovement.odometryMovementStatusFlag[2] == ODOMETRY_MOVEMENT_NO_MOVEMENT))
+	{
+		Robot.odometryMovingStatusFlag = 0x00;
+	}
+	else
+	{
+		Robot.odometryMovingStatusFlag = 0x01;
+	}
+	return;
+}
+
+// Subfunction for checkIfPositionIsReached() function
+void checkIfPositionIsReachedCoord(uint8_t i, float* robotCoordBuf)
+{
+	if (OdometryMovement.odometryMovementStatusFlag[i] != ODOMETRY_MOVEMENT_NO_MOVEMENT)
 		{
 			// Check if we reached final position or not
 			if (fabs(OdometryMovement.robotTargetDistanceCs1[i] - robotCoordBuf[i]) < accuracyOfMovement[i])
@@ -497,10 +518,6 @@ void checkIfPositionIsReached(void)
 				robotTargetSpeedCs1[i] = 0.0;
 				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_NO_MOVEMENT;
 				return;
-			}
-			else
-			{
-				Robot.odometryMovingStatusFlag = 0x01;
 			}
 			
 			// Check if mode should be changed
@@ -517,12 +534,11 @@ void checkIfPositionIsReached(void)
 			else
 			{
 				OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_DECCELERATION;
+				return;
 			}
 		}
-	}
 	return;
 }
-
 //--------------------------------------------- Other functions ------------------------------------------------//
 
 // Check status
