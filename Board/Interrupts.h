@@ -22,5 +22,8 @@ void TIM6_DAC_IRQHandler(void);
 // This interrupt is implemented in Manipulators.c
 void TIM5_IRQHandler(void);
 
+// Interrupt handler for I2C errors
+void I2C2_ER_IRQHandler(void);
+
 
 #endif

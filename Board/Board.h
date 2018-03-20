@@ -5,8 +5,19 @@
 #include "STM32F4_TIM.h"
 #include "STM32F4_UART.h"
 #include "STM32F4_RCC.h"
+#include "STM32F4_I2C.h"
 #include "Dynamixel_control.h"
 #include "Interrupts.h"
+
+//--------------------------------------------- I2C module ---------------------------------------------------//
+#define I2C_MODULE                       I2C2
+#define I2C_MODULE_EVENT_IRQN            I2C2_EV_IRQn
+#define I2C_MODULE_ERROR_IRQN            I2C2_ER_IRQn
+#define I2C_MODULE_PIN_AF                GPIO_AF_I2C2
+#define I2C_MODULE_SDA_PIN_PORT          GPIOB
+#define I2C_MODULE_SDA_PIN_NUMBER        GPIO_Pin_11
+#define I2C_MODULE_SCL_PIN_PORT          GPIOB
+#define I2C_MODULE_SCL_PIN_NUMBER        GPIO_Pin_10
 
 //--------------------------------------------- USART modules ------------------------------------------------//
 
@@ -118,6 +129,7 @@
 #define MOTOR_CONTROL_TIM_ARR            0xA410
 #define MOTOR_CONTROL_IRQN               TIM6_DAC_IRQn
 #define MOTOR_CONTROL_PERIOD             0.01f
+#define MOTOR_CONTROL_PERIOD_MILLISEC    (uint32_t)(MOTOR_CONTROL_PERIOD * 1000)
 #define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
 
 //--------------------------------------------- Timer for manipulators control (100 Hz) ----------------------------------------//

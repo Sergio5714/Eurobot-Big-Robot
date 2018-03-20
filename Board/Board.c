@@ -19,6 +19,12 @@ uint16_t* encCnt[4] = {ENCODER_1_CNT,
 					   ENCODER_3_CNT,
 					   ENCODER_4_CNT};
 
+// I2C module for rangefinders
+I2C_Module_With_State_Typedef I2CModule;
+					   
+// Absolute time of robot's operation in milliseconds
+uint32_t timeMilliseconds = 0x00;
+					   
 // Initialize all necessary peripheral devices
 void boardInitAll()
 {
@@ -31,7 +37,18 @@ void boardInitAll()
 	// Initialization of Clock system 
 	// System Core clock frequency = 168 MHZ, AHB frequency = 168 MHz, APB1 frequency = 42 MHz, APB2 frequency = 84 MHz)
 	SystemClockInitHse168Mhz();
-
+	//--------------------------------------------- I2C module for rangefinders ----------------------------------//
+	// Initialization
+	I2CModule.module = I2C_MODULE;
+	I2CModule.status = I2C_ACTIVE_MODE;
+	I2CInit(&I2CModule);
+	
+	// Initialization for SDA and SCL pins
+	gpioInitPin(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
+	gpioInitPinAf(I2C_MODULE_SCL_PIN_PORT, I2C_MODULE_SCL_PIN_NUMBER, I2C_MODULE_PIN_AF);
+	gpioInitPin(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
+	gpioInitPinAf(I2C_MODULE_SDA_PIN_PORT, I2C_MODULE_SDA_PIN_NUMBER, I2C_MODULE_PIN_AF);
+	
 	//--------------------------------------------- Usart module for dynamixel servo -----------------------------//
 	
 	// Usart initialization
@@ -158,6 +175,9 @@ void boardInitAll()
 	usartEnable(COM_USART_MODULE);
 	usartEnable(DYNAMIXEL_USART_MODULE);
 	
+	// Enable I2C module
+	I2CEnable(I2C_MODULE);
+	
 	// Enable Encoders
 	timEnable(ENCODER_1_TIM_MODULE);
 	timEnable(ENCODER_2_TIM_MODULE);
@@ -175,14 +195,22 @@ void boardInitAll()
 	//--------------------------------------------- Enable interrupts -------------------------------------------//
 	__NVIC_EnableIRQ(COM_USART_IRQN);
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
+	
+	//__NVIC_EnableIRQ(I2C_MODULE_EVENT_IRQN);
+	__NVIC_EnableIRQ(I2C_MODULE_ERROR_IRQN);
+	
 	__NVIC_EnableIRQ(MOTOR_CONTROL_IRQN);
 	__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
 	
 	// Priority
 	__NVIC_SetPriority(COM_USART_IRQN, 0X00);
 	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X01);
-	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X03);
-	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X02);
+	
+	//__NVIC_SetPriority(I2C_MODULE_EVENT_IRQN, 0X02);
+	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X02);
+	
+	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X04);
+	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X03);
 	
 	// Global enable
 	__enable_irq();
