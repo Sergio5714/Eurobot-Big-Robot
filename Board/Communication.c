@@ -8,7 +8,7 @@ uint8_t comBufLength = COM_REC_BUFFER_LEN;
 // Structure for input command
 Command_Struct inputCommand;
 
-uint32_t getBytesAvailable(const uint8_t* receiveBufferStart,const uint8_t* receiveBufferEnd)
+static uint32_t getBytesAvailable(const uint8_t* receiveBufferStart,const uint8_t* receiveBufferEnd)
 {
 	uint8_t* start = (uint8_t*) receiveBufferStart;
 	uint8_t* end = (uint8_t*) receiveBufferEnd;
@@ -100,7 +100,7 @@ Typedef_Protocol_Error getPackage()
 }
 
 // Increment pointer of buffer
-uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos)
+static uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos)
 {
 	uint32_t i;
 	uint8_t* tempPtr = (uint8_t*) ptr;

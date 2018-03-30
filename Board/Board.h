@@ -6,6 +6,7 @@
 #include "STM32F4_UART.h"
 #include "STM32F4_RCC.h"
 #include "STM32F4_I2C.h"
+#include "STM32F4_EXTI.h"
 #include "Dynamixel_control.h"
 #include "Interrupts.h"
 
@@ -29,15 +30,6 @@
 #define DYNAMIXEL_USART_TX_PIN_NUMBER    GPIO_Pin_10
 #define DYNAMIXEL_USART_RX_PIN_PORT      GPIOC
 #define DYNAMIXEL_USART_RX_PIN_NUMBER    GPIO_Pin_11
-
-//#define DEBUG_USART_MODULE               USART1
-//#define DEBUG_USART_IRQN                 USART1_IRQn
-//#define DEBUG_USART_BAUDRATE             9600
-//#define DEBUG_USART_PIN_AF               GPIO_AF_USART1
-//#define DEBUG_USART_TX_PIN_PORT          GPIOB
-//#define DEBUG_USART_TX_PIN_NUMBER        GPIO_Pin_6
-//#define DEBUG_USART_RX_PIN_PORT          GPIOB
-//#define DEBUG_USART_RX_PIN_NUMBER        GPIO_Pin_7
 
 #define COM_USART_MODULE                 USART1
 #define COM_USART_IRQN                   USART1_IRQn
@@ -141,6 +133,23 @@
 #define SERVO_CHECKER_IRQN               TIM5_IRQn
 #define SERVO_CHECKER_PERIOD             0.01f
 #define SERVO_CHECKER_TICKS_TO_SEC       0.00000238f
+
+
+//--------------------------------------------- Timer for local time in ms (1000 Hz) -------------------------------------------//
+// ARR = 42000, PSC = 2, fapb1 = 42 MHZ, Frequency = 1000 Hz
+#define LOCAL_TIME_TIM_MODULE            TIM7
+#define LOCAL_TIME_TIM_PSC               0x02
+#define LOCAL_TIME_TIM_ARR               0xA410
+#define LOCAL_TIME_IRQN                  TIM7_IRQn
+#define LOCAL_TIME_PERIOD                0.01f
+#define LOCAL_TIME_TICKS_TO_SEC          0.00000238f
+
+//--------------------------------------------- External interrupts ------------------------------------------------------------//
+
+#define EXTI_STARTUP_IRQ                 EXTI1_IRQn
+#define EXTI_STARTUP_PORT                GPIOD
+#define EXTI_STARTUP_SOURCE_PORT         EXTI_GPIOD_SOURCE_PORT
+#define EXTI_STARTUP_PIN                 GPIO_Pin_1
 
 //--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
 

@@ -2,6 +2,7 @@
  #define STM32F4_I2C
  
 #include "stm32f4xx.h"
+#include "Interrupts.h"
 
 // Typedef for mode of I2C message
 typedef enum
@@ -26,12 +27,13 @@ typedef struct
 {
 	I2C_TypeDef* module;
 	I2C_Status_Typedef status;
+	uint32_t timeOfLastI2CResetMillis;
 } I2C_Module_With_State_Typedef;
 
+// Macros for adresses
 #define I2C_ADDRESS(addr, mode) ((addr<<1)| mode)
-
 // Timeout 
-#define NUMBER_OF_TICKS_TIMEOUT 4000 // Approximately 1 millisecond
+#define I2C_TIMEOUT_VALUE_MS    0x02 // 1 millisecond affordable timeout between request and answer
 
 //--------------------------------------------- Initialization and reset -------------------------------------//
 
@@ -76,19 +78,19 @@ void I2CReadDR(I2C_TypeDef* I2Cx, uint8_t *byte);
 //--------------------------------------------- Inner functions that require status --------------------------//
 
 // Generate start conditions
-I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx);
+static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx);
 
 // Send adress byte with read or write mode
-I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr, I2C_MODE Mode);
+static I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr, I2C_MODE Mode);
 
 // Wait for one byte to be received
-I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx);
+static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx);
 
 // Wait for byte transfer finished event
-I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx);
+static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx);
 
 // Wait for stop flag to be cleared
-I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx);
+static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx);
 
 // Wait for busy line
 I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx);

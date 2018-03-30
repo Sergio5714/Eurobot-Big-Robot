@@ -13,6 +13,15 @@
 #define LEVEL_LOW_RANGE_INTERRUPT_VALUE  0x32 // 50 mm  
 #define LEVEL_HIGH_RANGE_INTERRUPT_VALUE 0x64 // 100 mm
 
+typedef enum
+{
+	RANGEFINDER_INTERRUPT_EMPTY,
+	RANGEFINDER_INTERRUPT_LEVEL_LOW,
+	RANGEFINDER_INTERRUPT_LEVEL_HIGH,
+	RANGEFINDER_INTERRUPT_OUT_OF_WINDOW,
+	RANGEFINDER_INTERRUPT_NEW_SAMPLE_READY
+} Rangefinder_Interrupt_Status_Typedef;
+
 enum regAddr
 {
   IDENTIFICATION__MODEL_ID              = 0x000,
@@ -89,44 +98,54 @@ enum regAddr
 
 //--------------------------------------------- High level functions -------------------------------------------//
 
-// Initialization
-ErrorStatus rangeFinderInitContiniousInterruptMode(uint8_t addr);
+// Initialization sensors for optical switch mode (new sample event interrupt without physical interrupt)
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr, uint8_t interruptDistanceLow, uint8_t interruptDistanceHigh);
+
+// Initialization sensor for collision avoidance mode (Low level physical interrupt)
+ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t interruptDistanceLow);
+
+// Change address
+ErrorStatus rangeFinderChangeAddress(uint8_t addr, uint8_t newAddress);
 
 // Return Status
-ErrorStatus getStatusOfSensor(uint8_t addr, uint8_t* value);
+ErrorStatus rangeFinderGetStatusOfSensor(uint8_t addr, uint8_t* value);
 
-// Single shot measurements
-ErrorStatus singleShotMeasurements(uint8_t addr, uint8_t* value);
+// Return interrupt status 
+ErrorStatus rangeFinderCheckInterruptStatusOfSensor(uint8_t addr, uint8_t* answer, Rangefinder_Interrupt_Status_Typedef referenceStatus);
+
+// Single shot measurement
+ErrorStatus rangeFinderSingleShotMeasurement(uint8_t addr, uint8_t* value);
 
 // Start continious measurements
-ErrorStatus startContiniousMeasurements(uint8_t addr);
+ErrorStatus rangeFinderStartContiniousMeasurements(uint8_t addr);
 
 // Read value after measurement
-ErrorStatus readMeasuredRange(uint8_t addr, uint8_t* value);
+ErrorStatus rangeFinderReadMeasuredRange(uint8_t addr, uint8_t* value);
 
 // Read raw value (without crosstalk calibration)
-ErrorStatus readMeasuredRange(uint8_t addr, uint8_t* value);
+ErrorStatus rangeFinderReadMeasuredRangeRaw(uint8_t addr, uint8_t* value);
 
 // Initialize mandatory registers
-ErrorStatus initMandatoryRegs(uint8_t addr);
+static ErrorStatus rangeFinderInitMandatoryRegs(uint8_t addr);
+
 //--------------------------------------------- Low level functions to access registers ------------------------//
 
  // Write an 8-bit value to register
-ErrorStatus rangeFinderWriteReg(uint16_t reg, uint8_t value, uint8_t addr);
+static ErrorStatus rangeFinderWriteReg(uint16_t reg, uint8_t value, uint8_t addr);
  
  // Write a 16-bit value to register
-ErrorStatus rangeFinderWriteReg16(uint16_t reg, uint16_t value, uint8_t addr);
+static ErrorStatus rangeFinderWriteReg16(uint16_t reg, uint16_t value, uint8_t addr);
  
  // Write a 32-bit value to register
-ErrorStatus rangeFinderWriteReg32(uint16_t reg, uint32_t value, uint8_t addr);
+static ErrorStatus rangeFinderWriteReg32(uint16_t reg, uint32_t value, uint8_t addr);
  
  // Read a 8-bit value from  register
-ErrorStatus rangeFinderReadReg(uint16_t reg, uint8_t* value, uint8_t addr);
+static ErrorStatus rangeFinderReadReg(uint16_t reg, uint8_t* value, uint8_t addr);
  
  // Read a 16-bit value from  register
-ErrorStatus rangeFinderReadReg16(uint16_t reg, uint16_t* value, uint8_t addr);
+static ErrorStatus rangeFinderReadReg16(uint16_t reg, uint16_t* value, uint8_t addr);
  
  // Read a 32-bit value from  register
-ErrorStatus rangeFinderReadReg32(uint16_t reg, uint32_t* value, uint8_t addr);
+static ErrorStatus rangeFinderReadReg32(uint16_t reg, uint32_t* value, uint8_t addr);
  
 #endif

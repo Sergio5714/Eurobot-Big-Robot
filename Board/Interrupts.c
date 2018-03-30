@@ -1,7 +1,9 @@
 #include "Interrupts.h"
 extern RobotStatus Robot;
 extern I2C_Module_With_State_Typedef I2CModule;
-extern uint32_t timeMilliseconds;
+
+// Local time of Robot's operation in ms
+uint32_t timeMilliseconds = 0x00;
 
 // Interrupt handler for motor control
 void TIM6_DAC_IRQHandler(void)
@@ -9,9 +11,6 @@ void TIM6_DAC_IRQHandler(void)
 	if (MOTOR_CONTROL_TIM_MODULE->SR & TIM_SR_UIF)
 	{
 		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
-		
-		// Increase absolute time in milliseconds
-		timeMilliseconds += MOTOR_CONTROL_PERIOD_MILLISEC;
 		
 		// Read data from Encoders (Encoders -> wheelsSpeed (+ wheelsCoord) -> robotSpeedCs1 (+ robotCoordCs1) )
 		readEnc();
@@ -34,10 +33,10 @@ void TIM6_DAC_IRQHandler(void)
 		else
 		{
 			// If there is no odometry movement make decceleraton for all speeds 
-			if (Robot.movingStatusFlag)
-			{
-				// TBD
-			}
+//			if (Robot.movingStatusFlag)
+//			{
+//				// TBD
+//			}
 		}
 		
 		// Calculation of forward kinematics
@@ -81,4 +80,67 @@ void I2C2_ER_IRQHandler()
 		return;
 	}
 	return;
+}
+
+// Interrupt for Local time timer (that counts in ms)
+void TIM7_IRQHandler()
+{
+	if (LOCAL_TIME_TIM_MODULE->SR & TIM_SR_UIF)
+	{
+		timClearStatusRegisterFlag(LOCAL_TIME_TIM_MODULE, TIM_SR_UIF);
+		
+		// Increase absolute time in milliseconds
+		timeMilliseconds ++;
+	}
+	 return;
+}
+
+// Interrupt handler for external startup interrupt
+void EXTI1_IRQHandler(void)
+{
+	// if startup switch is source
+	if(EXTI->PR & (0x01 << EXTI_STARTUP_PIN)) 
+	{  
+		// Clear Interrupt flag
+		EXTI->PR |= 0x01 << EXTI_STARTUP_PIN;
+		
+		// Change status of startup flag
+		Robot.startupInterruptStatusFlag = 0x01;
+	}
+}
+
+//--------------------------------------------- Some funtions for local time calculations --------------------------------------//
+uint32_t getLocalTime()
+{
+	return timeMilliseconds;
+}
+uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
+{
+	if (timeMilliseconds >= startTime)
+	{
+		if((timeMilliseconds - startTime) >= timeout)
+		{
+			// Timeout is exceeded
+			return 0x01;
+		}
+		else
+		{
+			// Timeout is not exceeded
+			return 0x00;	
+		}
+			
+	}
+	else
+	{
+		if((timeMilliseconds + 0xFFFF - startTime) >= timeout)
+		{
+			// Timeout is exceeded
+			return 0x01;
+		}
+		else
+		{
+			// Timeout is not exceeded
+			return 0x00;	
+		}
+	}
 }

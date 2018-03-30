@@ -1,4 +1,5 @@
 #include "Manipulators.h"
+#include "Interrupts.h"
 
 Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 Servo_Checker_Typedef servoChecker[NUMBER_OF_MANIPULATORS];
@@ -90,7 +91,7 @@ void initManipulators(void)
 	return;
 }
 
-ErrorStatus setServoAngleWithRetries(const uint8_t servoId, const uint16_t servoAngle)
+static ErrorStatus setServoAngleWithRetries(const uint8_t servoId, const uint16_t servoAngle)
 {
 	uint8_t i;
 	for (i = 0x00; i < TASKS_EXECUTOR_MAX_SEND_RETRIES; i++)
@@ -103,25 +104,12 @@ ErrorStatus setServoAngleWithRetries(const uint8_t servoId, const uint16_t servo
 	return ERROR;
 }
 
-ErrorStatus getServoAngleWithRetries(const uint8_t servoId, float* servoAngle)
+static ErrorStatus getServoAngleWithRetries(const uint8_t servoId, float* servoAngle)
 {
 	uint8_t i;
 	for (i = 0x00; i < TASKS_EXECUTOR_MAX_SEND_RETRIES; i++)
 	{
 		if (getServoAngle(servoId, servoAngle))
-		{
-			return SUCCESS;
-		}
-	}
-	return ERROR;
-}
-
-ErrorStatus getServoLoadWithRetries(const uint8_t servoId, uint16_t* servoLoad)
-{
-	uint8_t i;
-	for (i = 0x00; i < TASKS_EXECUTOR_MAX_SEND_RETRIES; i++)
-	{
-		if (getCurrentLoad(servoId, servoLoad))
 		{
 			return SUCCESS;
 		}
@@ -135,10 +123,6 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 	{	
 		// buffer for current angle and torgue
 		float angle;
-//		uint16_t torgue;
-		
-		// Increment number of time periods
-		servoChecker->numberOfTimerPeriods++;
 
 		// Read current angle of the servo
 		if (!getServoAngleWithRetries(servoChecker->servoId, &angle))
@@ -147,29 +131,18 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 			return;
 		}
 		
-//		// Read current load of the servo
-//		if (!getServoLoadWithRetries(servoChecker->servoId, &torgue))
-//		{
-//			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_RETRIES_EXCEEDED;
-//			return;
-//		}
-
-//		// Check if current load is abnormal
-//		if (torgue >= SERVO_CHECKER_MAX_LOAD)
-//		{
-//			servoChecker->statusFlag = SERVO_CHECKER_ERROR_MAXIMUM_LOAD_EXCEEDED;
-//			// Return servo to previous position
-//			setServoAngleWithRetries(servoChecker->servoId, servoChecker->previousPos);
-//			return;
-//		}
-		
 		// Check if servo reached target position
 		if (fabs(servoChecker->targetPos - angle) < SERVO_CHECKER_ANGLE_EPS)
 		{
 			servoChecker->statusFlag = SERVO_CHECKER_SUCCESFUL_CONFIRMATION;
 			return;
 		}
-		else if (servoChecker->numberOfTimerPeriods >= SERVO_CHECKER_MAX_TIMEOUT)
+//		else if (servoChecker->numberOfTimerPeriods >= SERVO_CHECKER_MAX_TIMEOUT)
+//		{
+//			servoChecker->statusFlag = SERVO_CHECKER_ERROR_WRONG_POSITION;
+//			return;
+//		}
+		else if (checkTimeout(servoChecker->startTimeMillis, SERVO_CHECKER_TIMEOUT_MS))
 		{
 			servoChecker->statusFlag = SERVO_CHECKER_ERROR_WRONG_POSITION;
 			return;
@@ -180,7 +153,7 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 
 void resetChecker(Servo_Checker_Typedef* servoChecker)
 {
-	servoChecker->numberOfTimerPeriods = 0x00;
+	servoChecker->startTimeMillis = 0x00;
 	servoChecker->servoId = 0x00;
 	servoChecker->targetPos = 0.0;
 	servoChecker->statusFlag = SERVO_CHECKER_WAITING_MODE;
@@ -311,11 +284,12 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 	}
 	// Reset servo checker
 	resetChecker(&servoChecker[number]);
-	// Load angle and id into servoChecker and turn it on
+	// Load angle, id, current time into servoChecker and turn it on
 	servoChecker[number].servoId = servoId;
 	servoChecker[number].targetPos = servoTargetPos;
 	servoChecker[number].previousPos = servoCurrentPos;
 	servoChecker[number].statusFlag = SERVO_CHECKER_ACTIVE_MODE;
+	servoChecker[number].startTimeMillis = getLocalTime();
 	// Extend timer
 	timEnable(SERVO_CHECKER_TIM_MODULE);
 	return;

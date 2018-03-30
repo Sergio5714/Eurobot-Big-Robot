@@ -2,8 +2,8 @@
 #include "STM32F4_RCC.h"
 #include "math.h"
 
-uint32_t timeOfLastI2CResetMillis = 0x00;
-extern uint32_t timeMilliseconds;
+// I2C module for rangefinders
+I2C_Module_With_State_Typedef I2CModule;
 //--------------------------------------------- Initialization and reset -------------------------------------//
 
 // Initialization of I2C
@@ -70,7 +70,10 @@ void I2CReset(I2C_Module_With_State_Typedef* I2Cx)
 	
 	// Init
 	I2CInit(I2Cx);
-	timeOfLastI2CResetMillis = timeMilliseconds;
+	
+	// Remeber time of last reset
+	I2Cx->timeOfLastI2CResetMillis = getLocalTime();
+	
 	// Enable
 	I2CEnable(I2Cx->module);
 
@@ -146,9 +149,9 @@ void I2CReadDR(I2C_TypeDef* I2Cx, uint8_t *byte)
 //--------------------------------------------- Inner functions that require status --------------------------//
 
 // Generate start conditions
-I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
 	
 	// Generate start condition
 	I2Cx->module->CR1 |= I2C_CR1_START;
@@ -160,8 +163,7 @@ I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -174,9 +176,10 @@ I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 }
 
 // Send adress byte with read or write mode
-I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr, I2C_MODE Mode)
+static I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr, I2C_MODE Mode)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
+	
 	//Send adress + mode
 	I2Cx->module->DR = I2C_ADDRESS(Addr,Mode);
 	
@@ -187,8 +190,7 @@ I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -198,9 +200,9 @@ I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8_t Addr
 }
 
 // Wait for one byte to be received
-I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
 	
 	//Waiting for RXNE flag to be set
 	while (!(I2Cx->module->SR1 & I2C_SR1_RXNE))
@@ -209,8 +211,7 @@ I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -220,9 +221,9 @@ I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 }
 
 // Wait for byte transfer finished event
-I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
 	
 	//Waiting for BTF flag to be set
 	while (!(I2Cx->module->SR1 & I2C_SR1_BTF))
@@ -231,8 +232,7 @@ I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -242,9 +242,9 @@ I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 }
 
 // Wait for stop flag to be cleared
-I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
 	
 	// Check stop flag
 	while (I2Cx->module->CR1 & I2C_CR1_STOP)
@@ -253,8 +253,7 @@ I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -264,9 +263,9 @@ I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx
 }
 
 // Wait for busy line
-I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx)
 {
-	uint32_t ticks = NUMBER_OF_TICKS_TIMEOUT;
+	uint32_t startTime = getLocalTime();
 	//Waiting for Bus to be free
 	while (I2Cx->module->SR2 & I2C_SR2_BUSY)
 	{
@@ -274,8 +273,7 @@ I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx)
 		{
 			return I2Cx->status;
 		}
-		ticks--;
-		if (ticks == 0x00)
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -456,23 +454,23 @@ ErrorStatus I2CReadBytes(I2C_Module_With_State_Typedef* I2Cx, uint8_t* readBuffe
 void I2CSearch(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint8_t address = 0x7F;
-	uint32_t startTime = timeMilliseconds;
+	uint32_t startTime = getLocalTime();
 	while (address!=0)
 	{
-		startTime = timeMilliseconds;
+		startTime = getLocalTime();
 		I2CSetAck(I2Cx->module);
 		I2CWaitBusyLine(I2Cx);
 		I2CStart(I2Cx);
 		//Send adress + mode Read
 		I2Cx->module->DR = I2C_ADDRESS(address,I2C_MODE_WRITE);
 		//Waiting for sending adress
-		while ((!(I2Cx->module->SR1 & I2C_SR1_ADDR)) && (timeMilliseconds - startTime < 600))
+		while ((!(I2Cx->module->SR1 & I2C_SR1_ADDR)) || (!checkTimeout(startTime, 1)))
 		{
 			
 		}
 		I2CStop(I2Cx->module);
 		I2CWaitForStopToBeCleared(I2Cx);
-		if (timeMilliseconds - startTime < 600)
+		if (checkTimeout(startTime, 1))
 		{
 			uint8_t device = address;
 		}

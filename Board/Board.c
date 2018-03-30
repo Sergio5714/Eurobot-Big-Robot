@@ -1,4 +1,5 @@
 #include "Board.h"
+
 TIM_PWM_Typedef motorPwmCh[4] = {{MOTOR_PWM_TIM_MODULE, MOTOR_CH1_NUMBER},
                                 {MOTOR_PWM_TIM_MODULE, MOTOR_CH2_NUMBER},
 								{MOTOR_PWM_TIM_MODULE, MOTOR_CH3_NUMBER},
@@ -19,11 +20,9 @@ uint16_t* encCnt[4] = {ENCODER_1_CNT,
 					   ENCODER_3_CNT,
 					   ENCODER_4_CNT};
 
+
 // I2C module for rangefinders
-I2C_Module_With_State_Typedef I2CModule;
-					   
-// Absolute time of robot's operation in milliseconds
-uint32_t timeMilliseconds = 0x00;
+extern I2C_Module_With_State_Typedef I2CModule;
 					   
 // Initialize all necessary peripheral devices
 void boardInitAll()
@@ -37,6 +36,7 @@ void boardInitAll()
 	// Initialization of Clock system 
 	// System Core clock frequency = 168 MHZ, AHB frequency = 168 MHz, APB1 frequency = 42 MHz, APB2 frequency = 84 MHz)
 	SystemClockInitHse168Mhz();
+	
 	//--------------------------------------------- I2C module for rangefinders ----------------------------------//
 	// Initialization
 	I2CModule.module = I2C_MODULE;
@@ -60,16 +60,6 @@ void boardInitAll()
 	gpioInitPinAf(DYNAMIXEL_USART_TX_PIN_PORT, DYNAMIXEL_USART_TX_PIN_NUMBER, DYNAMIXEL_USART_PIN_AF);
 	gpioInitPin(DYNAMIXEL_USART_RX_PIN_PORT, DYNAMIXEL_USART_RX_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
 	gpioInitPinAf(DYNAMIXEL_USART_RX_PIN_PORT, DYNAMIXEL_USART_RX_PIN_NUMBER, DYNAMIXEL_USART_PIN_AF);
-	
-	//--------------------------------------------- Usart module for debug --------------------------------------//
-	
-//	debugUsartSettings.USART_Baudrate = DEBUG_USART_BAUDRATE;
-//	usartInit(DEBUG_USART_MODULE, &debugUsartSettings);
-//	// Settings for pins
-//	gpioInitPin(DEBUG_USART_TX_PIN_PORT, DEBUG_USART_TX_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_UP);
-//	gpioInitPin(DEBUG_USART_RX_PIN_PORT, DEBUG_USART_RX_PIN_NUMBER, GPIO_MODE_AF, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_UP);
-//	gpioInitPinAf(DEBUG_USART_TX_PIN_PORT, DEBUG_USART_TX_PIN_NUMBER, DEBUG_USART_PIN_AF);
-//	gpioInitPinAf(DEBUG_USART_RX_PIN_PORT, DEBUG_USART_RX_PIN_NUMBER, DEBUG_USART_PIN_AF);
 	
 	//--------------------------------------------- Usart module for communication ------------------------------//
 	// Init usart module
@@ -114,6 +104,7 @@ void boardInitAll()
 	timInitEncoder(ENCODER_4_TIM_MODULE);
 	
 	//--------------------------------------------- Initialization of PWM channels for motor control ------------//
+	
 	// Settings for pins
 	// Base initialization of PWM pins
 	gpioInitPin(MOTOR_CH_PWM_PORT, MOTOR_CH1_PWM_PIN,GPIO_MODE_AF, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
@@ -164,12 +155,25 @@ void boardInitAll()
 	// Update interrupt enable
 	timInterruptEnable(SERVO_CHECKER_TIM_MODULE, TIM_DIER_UIE);
 	
-	//--------------------------------------------- Enable microchip for dynamixel signal pin -------------------//
+	//--------------------------------------------- Local time timer initialization ------------------------------//
+	timSettings.TIM_Period = LOCAL_TIME_TIM_ARR;
+	timSettings.TIM_Prescaler = LOCAL_TIME_TIM_PSC;
+	timInitBase(LOCAL_TIME_TIM_MODULE, &timSettings);
+	
+	
+	// Update interrupt enable
+	timInterruptEnable(LOCAL_TIME_TIM_MODULE, TIM_DIER_UIE);
+	
+	//--------------------------------------------- External interrupts ------------------------------------------//
+	gpioInitPin(EXTI_STARTUP_PORT, EXTI_STARTUP_PIN, GPIO_MODE_IN, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
+	extiInit(EXTI_STARTUP_SOURCE_PORT, EXTI_STARTUP_PIN, EXTI_INTERRUPT_MODE_FALLING);
+	
+	//--------------------------------------------- Enable microchip for dynamixel signal pin --------------------//
 
 	gpioInitPin(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
 	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_HIGH);
 	
-	//--------------------------------------------- Enable modules ----------------------------------------------//
+	//--------------------------------------------- Enable modules -----------------------------------------------//
 	
 	// Enable USART modules
 	usartEnable(COM_USART_MODULE);
@@ -191,26 +195,33 @@ void boardInitAll()
 	timEnable(MOTOR_CONTROL_TIM_MODULE);
 	// Enable Manipulators control timer
 	timEnable(SERVO_CHECKER_TIM_MODULE);
+	// Enable Local time timer
+	timEnable(LOCAL_TIME_TIM_MODULE);
 	
 	//--------------------------------------------- Enable interrupts -------------------------------------------//
+	// Enable
 	__NVIC_EnableIRQ(COM_USART_IRQN);
+	__NVIC_EnableIRQ(LOCAL_TIME_IRQN);
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
 	
-	//__NVIC_EnableIRQ(I2C_MODULE_EVENT_IRQN);
 	__NVIC_EnableIRQ(I2C_MODULE_ERROR_IRQN);
 	
 	__NVIC_EnableIRQ(MOTOR_CONTROL_IRQN);
 	__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
 	
+	__NVIC_EnableIRQ(EXTI_STARTUP_IRQ);
+	
 	// Priority
 	__NVIC_SetPriority(COM_USART_IRQN, 0X00);
-	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X01);
+	__NVIC_SetPriority(LOCAL_TIME_IRQN, 0X01);
 	
-	//__NVIC_SetPriority(I2C_MODULE_EVENT_IRQN, 0X02);
-	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X02);
+	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X02);
+	__NVIC_SetPriority(EXTI_STARTUP_IRQ, 0X02);
 	
-	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X04);
-	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X03);
+	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X03);
+	
+	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X05);
+	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X04);
 	
 	// Global enable
 	__enable_irq();

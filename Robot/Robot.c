@@ -7,9 +7,8 @@ RobotStatus Robot;
 OdometryMovementStruct OdometryMovement;
 
 // Values, calculated by using encoder's data
-// Speeds (rad/s) and coordinates (rad) of particular wheel
+// Speeds (rad/s) of particular wheel
 float wheelsSpeed[ROBOT_NUMBER_OF_MOTORS];
-float wheelsCoord[ROBOT_NUMBER_OF_MOTORS];
 
 // Instantaneous speeds and coordinates of robot in global coordinate system
 float robotSpeedCsGlobal[3];
@@ -91,12 +90,6 @@ void readEnc(void)
 	// Inverse motors 2 and 3 because of cylindrical transmission (Positive direction is CCW)
 	wheelsSpeed[1] = - wheelsSpeed[1];
 	wheelsSpeed[2] = - wheelsSpeed[2];
-	
-	// Calculate distance that wheel passed
-	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
-	{
-		wheelsCoord[i] += wheelsSpeed[i] * MOTOR_CONTROL_PERIOD;
-	}
 	
 	// Calculate inverse kinematics (wheelsSpeed -> robotSpeedCs1)
 	calcInverseKin();
@@ -417,7 +410,6 @@ void syncAccelerations(float* distance, float* speedAbs, float* accelerationAbs)
 void speedRecalculation(void)
 {
 	uint8_t i;
-//	float deltaCoord;
 	for (i = 0x00; i < 0x03; i++)
 	{
 		switch(OdometryMovement.odometryMovementStatusFlag[i])
@@ -446,18 +438,7 @@ void speedRecalculation(void)
 				{
 					robotTargetSpeedCs1[i] = OdometryMovement.finalSpeed[i];
 					OdometryMovement.odometryMovementStatusFlag[i] = ODOMETRY_MOVEMENT_NO_MOVEMENT;
-//					OdometryMovement.speedIncrement[i] = OdometryMovement.speedIncrement[i] / 2;
 				}
-				
-//				deltaCoord = (robotSpeedCs1[i] * robotSpeedCs1[i] - 
-//				OdometryMovement.finalSpeed[i] * OdometryMovement.finalSpeed[i]) / (2 * OdometryMovement.acceleration[i]);
-				
-				// Simple bang–bang controller
-//				if (fabs(OdometryMovement.robotTargetDistanceCs1[i] - robotCoordCs1[i]) - deltaCoord > accuracyOfMovement[i])
-//				{
-//					// We should increase speed a little bit
-//					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.speedIncrement[i] / 2;
-//				}
 				else
 				{
 					// Decrease speed
@@ -558,7 +539,7 @@ void updateRobotStatus(void)
 }
 
 // Maximum value of array
-void maxValue(float *a,uint8_t rows,float *b)
+static void maxValue(float *a,uint8_t rows,float *b)
 {
 	uint8_t i;
 	*b = fabs(*a);
@@ -571,7 +552,7 @@ void maxValue(float *a,uint8_t rows,float *b)
 }
 
 // Normalize input angle to range [0, 2*pi)
-void normalizeAngle(float* angle)
+static void normalizeAngle(float* angle)
 {
 	if (*angle >= 2*PI_NUMBER)
 	{

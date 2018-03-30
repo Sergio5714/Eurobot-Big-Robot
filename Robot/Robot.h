@@ -76,13 +76,15 @@ typedef struct
 	int8_t                            direction[3];
 }OdometryMovementStruct;
 
-//--------------------------------------------- External variables ---------------------------------------------//
 typedef struct 
 {
 	uint8_t movingStatusFlag;
 	uint8_t forwardKinCalcStatusFlag;
 	uint8_t odometryMovingStatusFlag;
+	uint8_t startupInterruptStatusFlag;
 }RobotStatus;
+
+//--------------------------------------------- External variables ---------------------------------------------//
 
 // For setMotorSpeed function
 extern TIM_PWM_Typedef motorPwmCh[4];
@@ -155,9 +157,9 @@ void checkIfPositionIsReachedCoord(uint8_t numberOfManipulator, float* robotCoor
 void updateRobotStatus(void);
 
 // Maximum value of array
-void maxValue(float *a, uint8_t rows,float *b);
+static void maxValue(float *a, uint8_t rows,float *b);
 
 // Normalize input angle to range [0, 2*pi)
-void normalizeAngle(float* angle);
+static void normalizeAngle(float* angle);
 
 #endif

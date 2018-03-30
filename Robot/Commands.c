@@ -240,6 +240,15 @@ void checkCommandAndExecute()
 			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x01);
 			break;
 		}
+		case GET_STARTUP_STATUS:
+		{
+			// Check if there is no parameters
+			if (inputCommand.numberOfreceivedParams != 0x00)
+				break;
+			uint8_t buf = Robot.startupInterruptStatusFlag;
+			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x01);
+			break;
+		}
 		case TAKE_CUBE:
 		{
 			// Check if manipulator's id is received

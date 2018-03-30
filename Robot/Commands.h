@@ -37,6 +37,7 @@ enum
 	
 	GET_ODOMETRY_MOVEMENT_STATUS  = 0xA0,
 	GET_MANIPULATOR_STATUS        = 0xA1,
+	GET_STARTUP_STATUS            = 0xA3,
 	
 	TAKE_CUBE                     = 0xB0,
 	UNLOAD_TOWER                  = 0xB1,

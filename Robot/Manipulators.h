@@ -40,9 +40,8 @@ typedef enum
 
 #define SERVO_CHECKER_ANGLE_EPS              1.0f
 #define SERVO_CHECKER_MAX_READ_REQUESTS      0x0A
-// Maximum timeout in Timer's periods
-#define SERVO_CHECKER_MAX_TIMEOUT            0x96  // 150
-#define SERVO_CHECKER_MAX_LOAD               0x401 // 1025
+// Maximum timeout in ms
+#define SERVO_CHECKER_TIMEOUT_MS             0x5DC  // 1500 ms
 
 // Checker status
 typedef enum
@@ -59,7 +58,7 @@ typedef enum
 typedef struct
 {
 	uint8_t                 servoId;
-	uint8_t                 numberOfTimerPeriods;
+	uint32_t                startTimeMillis;
 	float                   targetPos;
 	float                   previousPos;
 	Checker_Status_Typedef  statusFlag;
@@ -169,9 +168,9 @@ typedef enum
 
 //--------------------------------------------- FUNCTIONS ------------------------------------------------------//
 void initManipulators(void);
-ErrorStatus setServoAngleWithRetries(const uint8_t servoId, const uint16_t servoAngle);
-ErrorStatus getServoAngleWithRetries(const uint8_t servoId, float* servoAngle);
-ErrorStatus getServoLoadWithRetries(const uint8_t servoId, uint16_t* servoLoad);
+static ErrorStatus setServoAngleWithRetries(const uint8_t servoId, const uint16_t servoAngle);
+static ErrorStatus getServoAngleWithRetries(const uint8_t servoId, float* servoAngle);
+//static ErrorStatus getServoLoadWithRetries(const uint8_t servoId, uint16_t* servoLoad);
 
 //--------------------------------------------- ServoChecker functions -----------------------------------------//
 void checkPosServo(Servo_Checker_Typedef* servoChecker);

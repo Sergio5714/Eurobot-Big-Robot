@@ -38,10 +38,10 @@ typedef enum
 } Typedef_Protocol_Error;
 
 // Get number of available bytes in buffer
-uint32_t getBytesAvailable(const uint8_t* receiveBufferStart, const uint8_t* receiveBufferEnd);
+static uint32_t getBytesAvailable(const uint8_t* receiveBufferStart, const uint8_t* receiveBufferEnd);
 
 // Increment pointer of buffer
-uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos);
+static uint8_t* incrementPtr(const uint8_t* ptr, const uint32_t deltaPos);
 
 // Check if there is a package in buffer
 Typedef_Protocol_Error getPackage(void);
