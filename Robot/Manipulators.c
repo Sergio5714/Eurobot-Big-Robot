@@ -13,8 +13,8 @@ Manipulator_Subtasks_Typedef takeLastCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, 
                                                       SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR_INTERM,
                                                       SUBTASK_TERMINATOR};
 // Task sequence for unloading tower
-Manipulator_Subtasks_Typedef unloadTowerTaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR, 
-                                                     SUBTASK_LIFT_MANIPULATOR, SUBTASK_TERMINATOR};
+Manipulator_Subtasks_Typedef unloadTowerTaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR,
+                                                     SUBTASK_TERMINATOR};
 // Task sequence for lifting to intermediate position
 Manipulator_Subtasks_Typedef liftToIntermPosTaskSeq[] = {SUBTASK_LIFT_MANIPULATOR_INTERM, SUBTASK_TERMINATOR};
 
