@@ -3,8 +3,16 @@
 
 #include "STM32F4_I2C.h"
 #include "VL6180x.h"
+#include "Interrupts.h"
+//--------------------------------------------- Macros for proximity sensor ------------------------------------//
+#define RANGE_FINDER_RESET_DELAY_MS                0x02
+#define RANGE_FINDER_INITIAL_ADDR_TO_SETUP         RANGEFINDER_DEFAULT_ADDR + 0x01
 
-#define EXPANDER_I2C_ADDRESS                       0x20
+#define NUMBER_OF_RANGE_FINDERS                    0x0F
+//--------------------------------------------- Macros for expander --------------------------------------------//
+#define EXPANDER_INTERRUPT_I2C_ADDRESS             0x20
+#define EXPANDER_RESET_I2C_ADDRESS                 0x21
+
 #define EXPANDER_REG_DIR_A                         0x00
 #define EXPANDER_REG_DIR_B                         0x10
 #define EXPANDER_REG_VALUE_A                       0x0A
@@ -21,7 +29,49 @@
 #define EXPANDER_REG_INT_CAP_VAL_A                 0x08
 #define EXPANDER_REG_INT_CAP_VAL_B                 0x18 
 
+// Typedef for rangefinder's errors
+typedef enum
+{
+	RANGE_FINDER_NO_ERROR,
+	RANGE_FINDER_ERROR_WHILE_INIT,
+	RANGE_FINDER_ERROR_WHILE_START_MEASUREMENTS,
+	RANGE_FINDER_ERROR_WHILE_OPERATION,
+} Range_Finder_Errors_Typedef;
+
+typedef enum
+{
+	RANGE_FINDER_NO_NEED_TO_REINIT,
+	RANGE_FINDER_REINIT_IS_NECESSARY,
+} Range_Finders_Reinit_flag_Typedef;
+
+// Typedef for common struc for all rangefinders that contain the whole information
+typedef struct
+{
+	uint16_t outputVoltageOfExpander;
+	uint8_t rangeValues[NUMBER_OF_RANGE_FINDERS];
+	Range_Finder_Errors_Typedef errorFlags[NUMBER_OF_RANGE_FINDERS];
+	Range_Finders_Reinit_flag_Typedef reinitFlags[NUMBER_OF_RANGE_FINDERS];
+	uint8_t gloabalReinitFlag;
+} Range_Finders_Struct_Typedef;
+
 //--------------------------------------------- High level functions -------------------------------------------//
+
+// Global initialization
+ErrorStatus initRangeFindersGlobally(void);
+
+// Read all values of rangefinders
+ErrorStatus readRangesGlobally(void);
+
+// Check if rangefinders should be reinitialized or not
+void checkRangeFindersReinitFlags(void);
+
+// Reset particular rangefinder
+ErrorStatus resetRangeFinder(uint8_t numberOfSensor);
+
+// Init particular rangefinder
+ErrorStatus initRangeFinder(uint8_t numberOfSensor);
+
+//--------------------------------------------- Middle level functions -----------------------------------------//
 
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr);

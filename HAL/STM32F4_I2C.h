@@ -33,7 +33,8 @@ typedef struct
 // Macros for adresses
 #define I2C_ADDRESS(addr, mode) ((addr<<1)| mode)
 // Timeout 
-#define I2C_TIMEOUT_VALUE_MS    0x02 // 1 millisecond affordable timeout between request and answer
+#define I2C_TIMEOUT_VALUE_MS    0x02 // 2 millisecond affordable timeout between request and answer
+#define I2C_TIMEOUT_AFTER_RESET 0x64 // 100 ms timeout after reset of I2C bus
 
 //--------------------------------------------- Initialization and reset -------------------------------------//
 
@@ -55,7 +56,7 @@ void I2CCheckBus(I2C_Module_With_State_Typedef* I2Cx);
 //--------------------------------------------- Inner functions ----------------------------------------------//
 
 // Generate stop conditions
-static void I2CStop(I2C_TypeDef* I2Cx);
+void I2CStop(I2C_TypeDef* I2Cx);
 
 // Set acknowledgement bit
 static void I2CSetAck(I2C_TypeDef* I2Cx);
@@ -90,7 +91,7 @@ static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx);
 static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx);
 
 // Wait for stop flag to be cleared
-static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx);
+I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx);
 
 // Wait for busy line
 I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx);

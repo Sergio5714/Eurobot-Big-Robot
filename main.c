@@ -13,21 +13,16 @@ uint32_t numberOfReceivedPackages;
 uint32_t numberOfChecksumErrors;
 uint32_t numberOfSmallLengthErrors;
 
-uint8_t range;
-
-uint8_t state;
+uint32_t startTime;
+uint32_t readDuration;
+uint32_t reinitDuration;
 
 int main()
 {		
-
-	state = 0;
    	boardInitAll();
 	initManipulators();
 	Robot.forwardKinCalcStatusFlag = 0x01;
-	
-	//initAllRangefinders();
-	//rangeFinderInitContiniousInterruptLevelLowMode(RANGEFINDER_DEFAULT_ADDR, 100);
-	//rangeFinderStartContiniousMeasurements(RANGEFINDER_DEFAULT_ADDR);
+	initRangeFindersGlobally();
 	
 	while (1)
 	{
@@ -45,21 +40,18 @@ int main()
 				break;
 		};
 		checkCommandAndExecute();
-		if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, 1000))
-		{
-			rangeFinderCheckInterruptStatusOfSensor(RANGEFINDER_DEFAULT_ADDR, &state, RANGEFINDER_INTERRUPT_LEVEL_LOW);
-			if (state)
-			{
-				rangeFinderReadMeasuredRange(RANGEFINDER_DEFAULT_ADDR, &range);
-			}
-		}
-//  	if (state)
-//		{
-//			expanderReadInterrupt();
-//			state = 0;
-//		}
-		//I2CCheckBus(&I2CModule);
 		
-		//I2CSearch(&I2CModule);
+		// get local time
+		startTime = getLocalTime();
+		
+		readRangesGlobally();
+		
+		// calculate duration of read function
+		readDuration = getLocalTime() - startTime;
+		
+		
+		checkRangeFindersReinitFlags();
+		// calculate duration of reinitialization
+		reinitDuration = getLocalTime() - startTime - readDuration;
 	}
 }

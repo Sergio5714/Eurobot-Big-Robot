@@ -52,7 +52,7 @@
 #define MOVEMENT_XY_ACCURACY               0.0005f    // 0.5 mm
 #define ODOMETRY_MOVEMENT_ACCELERATION_X   1.5f       // 1.5 m/s^2
 #define ODOMETRY_MOVEMENT_ACCELERATION_Y   0.5f       // 0.5 m/s^2
-#define ODOMETRY_MOVEMENT_ACCELERATION_W   6.0f       // 3 rad/s^2
+#define ODOMETRY_MOVEMENT_ACCELERATION_W   6.0f       // 6 rad/s^2
 
 typedef enum
 {

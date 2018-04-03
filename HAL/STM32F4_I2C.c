@@ -38,7 +38,7 @@ void I2CInit(I2C_Module_With_State_Typedef* I2Cx)
 	I2Cx->module->CCR |= I2C_CCR_FS;
 	//I2Cx->CCR |= I2C_CCR_DUTY;
 	//I2Cx->CCR |= (uint32_t) ceil(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler() / 25 / 400);
-	I2Cx->module->CCR |= (uint32_t) ceil(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler()/ 3 / 100);
+	I2Cx->module->CCR |= (uint32_t) ceil(GLOBAL_CORE_FREQUENCY * 1000 / rccGetApb1Prescaler()/ 3 / 300);
 	
 	//Speed of signal's rising
 	I2Cx->module->TRISE = 15;
@@ -76,6 +76,9 @@ void I2CReset(I2C_Module_With_State_Typedef* I2Cx)
 	
 	// Enable
 	I2CEnable(I2Cx->module);
+	
+	// Return active status
+	I2Cx->status = I2C_ACTIVE_MODE;
 
 	return;
 }
@@ -91,14 +94,13 @@ void I2CCheckBus(I2C_Module_With_State_Typedef* I2Cx)
 	{
 		// Reset I2C bus
 		I2CReset(I2Cx);
-		I2Cx->status = I2C_ACTIVE_MODE;
 	}
 	return;
 }
 //--------------------------------------------- Inner functions ----------------------------------------------//
 
 // Generate stop conditions
-static void I2CStop(I2C_TypeDef* I2Cx)
+void I2CStop(I2C_TypeDef* I2Cx)
 {
 	I2Cx->CR1|=I2C_CR1_STOP;
 	return;
@@ -242,7 +244,7 @@ static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 }
 
 // Wait for stop flag to be cleared
-static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
+I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
 	
@@ -472,7 +474,6 @@ void I2CSearch(I2C_Module_With_State_Typedef* I2Cx)
 		I2CWaitForStopToBeCleared(I2Cx);
 		if (checkTimeout(startTime, 1))
 		{
-			uint8_t device = address;
 		}
 		address--;
 		

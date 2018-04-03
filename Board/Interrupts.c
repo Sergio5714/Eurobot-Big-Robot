@@ -69,6 +69,9 @@ void I2C2_ER_IRQHandler()
 		// Clear bit
 		CLEAR_BIT(I2C_MODULE->SR1, I2C_SR1_AF);
 		I2CModule.status = I2C_ACKNOWLEDGE_ERROR;
+		// Generate stop condition
+		I2CStop(I2CModule.module);
+		I2CWaitForStopToBeCleared(&I2CModule);
 		return;
 	}
 	// Bus error(misplaced stop or start condition)
@@ -143,4 +146,13 @@ uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
 			return 0x00;	
 		}
 	}
+}
+void delayMs(uint16_t delay)
+{
+	uint32_t startTime = getLocalTime();
+	while(!checkTimeout(startTime, delay))
+	{
+		
+	}
+	return;
 }

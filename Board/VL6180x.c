@@ -86,9 +86,10 @@ ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr, uint8_
   }
   else
   {
-    // Sensor has already been initialized
+    // Sensor has already been initialized (but we use reset button, so it is undesired situation)
+	  return ERROR;
   }
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 // Initialization sensor for collision avoidance mode (Low level physical interrupt)
@@ -220,14 +221,14 @@ ErrorStatus rangeFinderCheckInterruptStatusOfSensor(uint8_t addr, uint8_t* answe
 }
 
 // Return Status
-static ErrorStatus rangeFinderGetStatusOfSensor(uint8_t addr, uint8_t* value)
-{
-	if(rangeFinderReadReg(RESULT_RANGE_STATUS, value, addr)!= SUCCESS)
-	{
-		return ERROR;
-	}
-	return SUCCESS;
-}
+//static ErrorStatus rangeFinderGetStatusOfSensor(uint8_t addr, uint8_t* value)
+//{
+//	if(rangeFinderReadReg(RESULT_RANGE_STATUS, value, addr)!= SUCCESS)
+//	{
+//		return ERROR;
+//	}
+//	return SUCCESS;
+//}
 
 // Single shot measurement
 ErrorStatus rangeFinderSingleShotMeasurement(uint8_t addr, uint8_t* value)

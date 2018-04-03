@@ -10,7 +10,7 @@
 
 #define MEASUREMENT_TIMEOUT              0x32 // 50 milliseconds
 
-#define LEVEL_LOW_RANGE_INTERRUPT_VALUE  0x32 // 50 mm  
+#define LEVEL_LOW_RANGE_INTERRUPT_VALUE  0xC8 // 200 mm  
 #define LEVEL_HIGH_RANGE_INTERRUPT_VALUE 0x64 // 100 mm
 
 typedef enum
