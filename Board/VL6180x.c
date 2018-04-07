@@ -7,7 +7,7 @@ extern I2C_Module_With_State_Typedef I2CModule;
 
 //--------------------------------------------- High level functions -------------------------------------------//
 // Initialization sensors for optical switch mode (new sample event interrupt without physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr, uint8_t interruptDistanceLow, uint8_t interruptDistanceHigh)
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr)
 {
 	// Check if system is under reset or not
  	uint8_t buf;
@@ -81,7 +81,7 @@ ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr, uint8_
 		if (rangeFinderWriteReg(SYSTEM_FRESH_OUT_OF_RESET, 0x00, addr) != SUCCESS)
 		{
 			return ERROR;
-		}
+		}		
 		return SUCCESS;
   }
   else
@@ -138,11 +138,11 @@ ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t
 		{
 			return ERROR;
 		}
-		// Enable GPIO1 interrupt output (active - high)
-		if (rangeFinderWriteReg(SYSTEM_MODE_GPIO1, 0x30, addr) != SUCCESS)
-		{
-			return ERROR;
-		}
+//		// Enable GPIO1 interrupt output (active - high)
+//		if (rangeFinderWriteReg(SYSTEM_MODE_GPIO1, 0x30, addr) != SUCCESS)
+//		{
+//			return ERROR;
+//		}
 		
 		// Indicate that data will be updated (Flag set over I2C to indicate that data is being updated)
 		if (rangeFinderWriteReg(SYSTEM_GROUPED_PARAMETER_HOLD, 0x01, addr) != SUCCESS)
@@ -179,9 +179,10 @@ ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t
   }
   else
   {
-    // Sensor has already been initialized
+    // Sensor has already been initialized (but we use reset button, so it is undesired situation)
+	  return ERROR;
   }
-	return SUCCESS;
+	//return SUCCESS;
 }
 
 // Change address
@@ -219,16 +220,6 @@ ErrorStatus rangeFinderCheckInterruptStatusOfSensor(uint8_t addr, uint8_t* answe
 	}
 	return SUCCESS;
 }
-
-// Return Status
-//static ErrorStatus rangeFinderGetStatusOfSensor(uint8_t addr, uint8_t* value)
-//{
-//	if(rangeFinderReadReg(RESULT_RANGE_STATUS, value, addr)!= SUCCESS)
-//	{
-//		return ERROR;
-//	}
-//	return SUCCESS;
-//}
 
 // Single shot measurement
 ErrorStatus rangeFinderSingleShotMeasurement(uint8_t addr, uint8_t* value)

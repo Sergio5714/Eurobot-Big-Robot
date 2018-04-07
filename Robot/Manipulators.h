@@ -38,10 +38,10 @@ typedef enum
 
 //--------------------------------------------- Typedefs and enums for servoChecker timer ----------------------//
 
-#define SERVO_CHECKER_ANGLE_EPS              1.0f
+#define SERVO_CHECKER_ANGLE_EPS              2.0f
 #define SERVO_CHECKER_MAX_READ_REQUESTS      0x0A
 // Maximum timeout in ms
-#define SERVO_CHECKER_TIMEOUT_MS             0x5DC  // 1500 ms
+#define SERVO_CHECKER_TIMEOUT_MS             0x708  // 1800 ms
 
 // Checker status
 typedef enum

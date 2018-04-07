@@ -5,10 +5,12 @@
 #include "VL6180x.h"
 #include "Interrupts.h"
 //--------------------------------------------- Macros for proximity sensor ------------------------------------//
-#define RANGE_FINDER_RESET_DELAY_MS                0x02
+#define RANGE_FINDER_RESET_DELAY_MS                0x01
 #define RANGE_FINDER_INITIAL_ADDR_TO_SETUP         RANGEFINDER_DEFAULT_ADDR + 0x01
+#define RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR  0x09 // Number of last sensor for collision avoidance
 
-#define NUMBER_OF_RANGE_FINDERS                    0x0F
+#define NUMBER_OF_RANGE_FINDERS                    0x10
+#define NUMBER_OF_RANGE_FINDERS_FOR_CALIBR         0x06
 //--------------------------------------------- Macros for expander --------------------------------------------//
 #define EXPANDER_INTERRUPT_I2C_ADDRESS             0x20
 #define EXPANDER_RESET_I2C_ADDRESS                 0x21
@@ -38,6 +40,13 @@ typedef enum
 	RANGE_FINDER_ERROR_WHILE_OPERATION,
 } Range_Finder_Errors_Typedef;
 
+// Typedef for expander's errors
+typedef enum
+{
+	EXPANDER_NO_ERROR,
+	EXPANDER_ERROR,
+} Expander_Errors_Typedef;
+
 typedef enum
 {
 	RANGE_FINDER_NO_NEED_TO_REINIT,
@@ -47,11 +56,14 @@ typedef enum
 // Typedef for common struc for all rangefinders that contain the whole information
 typedef struct
 {
-	uint16_t outputVoltageOfExpander;
 	uint8_t rangeValues[NUMBER_OF_RANGE_FINDERS];
+	uint8_t dataForCalibration[NUMBER_OF_RANGE_FINDERS_FOR_CALIBR];
 	Range_Finder_Errors_Typedef errorFlags[NUMBER_OF_RANGE_FINDERS];
 	Range_Finders_Reinit_flag_Typedef reinitFlags[NUMBER_OF_RANGE_FINDERS];
-	uint8_t gloabalReinitFlag;
+	Expander_Errors_Typedef outputExpander;
+	Expander_Errors_Typedef interruptExpander;
+	uint16_t outputVoltageOfExpander;
+	uint8_t globalReinitFlag;
 } Range_Finders_Struct_Typedef;
 
 //--------------------------------------------- High level functions -------------------------------------------//
@@ -64,6 +76,9 @@ ErrorStatus readRangesGlobally(void);
 
 // Check if rangefinders should be reinitialized or not
 void checkRangeFindersReinitFlags(void);
+
+// Make postprocessing of data from rangefinders for calibration
+void postprocessDataForCalibration(void);
 
 // Reset particular rangefinder
 ErrorStatus resetRangeFinder(uint8_t numberOfSensor);

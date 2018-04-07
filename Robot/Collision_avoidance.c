@@ -1,19 +1,28 @@
 #include "Collision_avoidance.h"
 extern I2C_Module_With_State_Typedef I2CModule;
-
 Range_Finders_Struct_Typedef rangeFinders;
+
+// Levels of measurements for calibration
+uint8_t lowLevelValueToCompare[NUMBER_OF_RANGE_FINDERS_FOR_CALIBR] = {0x00, 0x32, 0x00, 0x32, 0x00, 0x3C};
+uint8_t highLevelValueToCompare[NUMBER_OF_RANGE_FINDERS_FOR_CALIBR] = {0x3C, 0x78, 0x3C, 0x78, 0x3C, 0x82};
+//                                                                     0-60,50-120,0-60,50-120,0-60,60-130
+
 //--------------------------------------------- High level functions -------------------------------------------//
 // Global initialization
 ErrorStatus initRangeFindersGlobally(void)
 {
 	if (initExpanderOutputMode(EXPANDER_RESET_I2C_ADDRESS) != SUCCESS)
 	{
+		// Error arised
+		rangeFinders.outputExpander = EXPANDER_ERROR;
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
 		return ERROR;
 	}
 	if (initExpanderInterruptMode(EXPANDER_INTERRUPT_I2C_ADDRESS) != SUCCESS)
 	{
+		// Error arised
+		rangeFinders.interruptExpander = EXPANDER_ERROR;
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
 		return ERROR;
@@ -49,30 +58,30 @@ ErrorStatus readRangesGlobally(void)
 {
 	uint8_t i;
 	uint8_t interruptStatus[NUMBER_OF_RANGE_FINDERS];
+	Rangefinder_Interrupt_Status_Typedef interruptStatusToRequest;
 	
 	// Check timeout for last I2C bus restart
 	if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, I2C_TIMEOUT_AFTER_RESET))
 	{
 		for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 		{
-			// Get status of interrupt of particular rangefinder
-			if (rangeFinderCheckInterruptStatusOfSensor(RANGE_FINDER_INITIAL_ADDR_TO_SETUP + i, &interruptStatus[i], RANGEFINDER_INTERRUPT_LEVEL_LOW) != SUCCESS)
+			// If error occured before, do not acquire measurements
+			if (rangeFinders.reinitFlags[i] != RANGE_FINDER_REINIT_IS_NECESSARY)
 			{
-				rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_OPERATION;
-				rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
-				// Error was recoreded into high level flag, so clear low level
-				I2CModule.status = I2C_ACTIVE_MODE;
-			}
-			else
-			{
-				// Status was received. No errors occured
-				rangeFinders.errorFlags[i] = RANGE_FINDER_NO_ERROR;
-			}
-			// If measurement is ready
-			if (interruptStatus[i])
-			{
-				// Read measurements
-				if(rangeFinderReadMeasuredRange(RANGE_FINDER_INITIAL_ADDR_TO_SETUP +i, &rangeFinders.rangeValues[i]) != SUCCESS)
+				// Distinguish two types of sensors
+				if ( i > RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR)
+				{
+					// For calibration 
+					interruptStatusToRequest =  RANGEFINDER_INTERRUPT_NEW_SAMPLE_READY;
+				}
+				else
+				{
+					// For collision avoidance 
+					interruptStatusToRequest =  RANGEFINDER_INTERRUPT_LEVEL_LOW;
+				}
+				
+				// Get status of interrupt of particular rangefinder
+				if (rangeFinderCheckInterruptStatusOfSensor(RANGE_FINDER_INITIAL_ADDR_TO_SETUP + i, &interruptStatus[i], interruptStatusToRequest) != SUCCESS)
 				{
 					rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_OPERATION;
 					rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
@@ -81,8 +90,25 @@ ErrorStatus readRangesGlobally(void)
 				}
 				else
 				{
-					// Measurement was received. No errors occured
+					// Status was received. No errors occured
 					rangeFinders.errorFlags[i] = RANGE_FINDER_NO_ERROR;
+				}
+				// If measurement is ready
+				if (interruptStatus[i])
+				{
+					// Read measurements
+					if(rangeFinderReadMeasuredRange(RANGE_FINDER_INITIAL_ADDR_TO_SETUP +i, &rangeFinders.rangeValues[i]) != SUCCESS)
+					{
+						rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_OPERATION;
+						rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
+						// Error was recoreded into high level flag, so clear low level
+						I2CModule.status = I2C_ACTIVE_MODE;
+					}
+					else
+					{
+						// Measurement was received. No errors occured
+						rangeFinders.errorFlags[i] = RANGE_FINDER_NO_ERROR;
+					}
 				}
 			}
 		}
@@ -95,14 +121,19 @@ void checkRangeFindersReinitFlags(void)
 {
 	uint8_t i;
 	// Check a situation when even expander should be reinitialized
-	if (rangeFinders.gloabalReinitFlag)
+	if (rangeFinders.globalReinitFlag)
 	{
-		initRangeFindersGlobally();
-		// No need for global reinit
-		rangeFinders.gloabalReinitFlag = 0x00;
-		for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
+		// Check timeout for last I2C bus restart
+		if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, I2C_TIMEOUT_AFTER_RESET))
 		{
-			rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
+			// Init everything from a scratch
+			initRangeFindersGlobally();
+			// Clear flag for global reinit
+			rangeFinders.globalReinitFlag = 0x00;
+			for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
+			{
+				rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
+			}
 		}
 		return;
 	}
@@ -119,31 +150,53 @@ void checkRangeFindersReinitFlags(void)
 		{
 			// Reset I2C bus
 			I2CReset(&I2CModule);
-			rangeFinders.gloabalReinitFlag = 0x01;
+			rangeFinders.globalReinitFlag = 0x01;
 			return;
 		}
 		
-		// Initialize "silent" rangefinders
-		for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
+		// Check timeout for last I2C bus restart
+		if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, I2C_TIMEOUT_AFTER_RESET))
 		{
-			if (rangeFinders.reinitFlags[i])
+			// Initialize "silent" rangefinders
+			for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 			{
-				if (initRangeFinder(i) != SUCCESS)
+				if (rangeFinders.reinitFlags[i])
 				{
-					// Clear low level error flag
-					I2CModule.status = I2C_ACTIVE_MODE;
-					return;
+					if (initRangeFinder(i) != SUCCESS)
+					{
+						// Clear low level error flag
+						I2CModule.status = I2C_ACTIVE_MODE;
+						return;
+					}
+					if(rangeFinderStartContiniousMeasurements(RANGE_FINDER_INITIAL_ADDR_TO_SETUP + i) != SUCCESS)
+					{
+						// Clear low level error flag
+						I2CModule.status = I2C_ACTIVE_MODE;
+					}
+					// Successful initialization, clear reinit flag
+					rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 				}
-				if(rangeFinderStartContiniousMeasurements(RANGE_FINDER_INITIAL_ADDR_TO_SETUP + i) != SUCCESS)
-				{
-					// Clear low level error flag
-					I2CModule.status = I2C_ACTIVE_MODE;
-				}
-				// Successful initialization, clear reinit flag
-				rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 			}
 		}
-		
+	}
+	return;
+}
+
+// Make postprocessing of data from rangefinders for calibration
+void postprocessDataForCalibration(void)
+{
+	uint8_t i;
+	for ( i = 0x00; i < NUMBER_OF_RANGE_FINDERS_FOR_CALIBR; i++)
+	{
+		if ( (rangeFinders.rangeValues[RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR + 0x01 + i] > lowLevelValueToCompare[i])
+			 && (rangeFinders.rangeValues[RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR + 0x01 + i] < highLevelValueToCompare[i]))
+		{
+			rangeFinders.dataForCalibration[i] = 0x01;
+		}
+		else
+		{
+			rangeFinders.dataForCalibration[i] = 0x00;
+		}
 	}
 	return;
 }
@@ -175,9 +228,21 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor)
 		return ERROR;
 	}
 	// Initialization
-	if(rangeFinderInitContiniousInterruptLevelLowMode(RANGEFINDER_DEFAULT_ADDR, LEVEL_LOW_RANGE_INTERRUPT_VALUE)  != SUCCESS)
+	if ( numberOfSensor > RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR)
 	{
-		return ERROR;
+		// Initialize rangefinders as optical switches
+		if(rangeFinderInitContiniousInterruptNewSampleMode(RANGEFINDER_DEFAULT_ADDR)  != SUCCESS)
+		{
+			return ERROR;
+		}
+	}
+	else
+	{
+		// Initialize rangefinders for collision avoidance 
+		if(rangeFinderInitContiniousInterruptLevelLowMode(RANGEFINDER_DEFAULT_ADDR, LEVEL_LOW_RANGE_INTERRUPT_VALUE)  != SUCCESS)
+		{
+			return ERROR;
+		}
 	}
 	// Change address
 	uint8_t newAddr = RANGE_FINDER_INITIAL_ADDR_TO_SETUP + numberOfSensor;

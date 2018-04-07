@@ -5,12 +5,17 @@ extern I2C_Module_With_State_Typedef I2CModule;
 // Local time of Robot's operation in ms
 uint32_t timeMilliseconds = 0x00;
 
+uint32_t durationMotorControl;
+uint32_t durationCollAvoid;
+
 // Interrupt handler for motor control
 void TIM6_DAC_IRQHandler(void)
 {
 	if (MOTOR_CONTROL_TIM_MODULE->SR & TIM_SR_UIF)
 	{
 		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
+		
+		uint32_t startTime = getLocalTime();
 		
 		// Read data from Encoders (Encoders -> wheelsSpeed (+ wheelsCoord) -> robotSpeedCs1 (+ robotCoordCs1) )
 		readEnc();
@@ -48,6 +53,7 @@ void TIM6_DAC_IRQHandler(void)
 			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
 			setMotorSpeeds();
 		}
+		durationMotorControl = startTime - getLocalTime();
 	}
 	return;
 }
@@ -69,9 +75,6 @@ void I2C2_ER_IRQHandler()
 		// Clear bit
 		CLEAR_BIT(I2C_MODULE->SR1, I2C_SR1_AF);
 		I2CModule.status = I2C_ACKNOWLEDGE_ERROR;
-		// Generate stop condition
-		I2CStop(I2CModule.module);
-		I2CWaitForStopToBeCleared(&I2CModule);
 		return;
 	}
 	// Bus error(misplaced stop or start condition)
@@ -110,6 +113,25 @@ void EXTI1_IRQHandler(void)
 		// Change status of startup flag
 		Robot.startupInterruptStatusFlag = 0x01;
 	}
+}
+
+// Interrupt handler for collision avoidance
+void TIM8_TRG_COM_TIM14_IRQHandler(void)
+{
+	if (COLL_AVOID_TIM_MODULE->SR & TIM_SR_UIF)
+	{
+		if (getLocalTime() > 2000)
+		{
+			uint32_t startTime = getLocalTime();
+			timClearStatusRegisterFlag(COLL_AVOID_TIM_MODULE, TIM_SR_UIF);
+			readRangesGlobally();
+			postprocessDataForCalibration();
+			//checkRangeFindersReinitFlags();
+			durationCollAvoid  = getLocalTime() - startTime;
+		}
+		
+	}
+	 return;
 }
 
 //--------------------------------------------- Some funtions for local time calculations --------------------------------------//

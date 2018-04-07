@@ -5,6 +5,7 @@
 #include "Board.h"
 #include "Robot.h"
 
+
 // Interrupt handler for receiving data from Raspberry Pi (DEBUG_USART_MODULE = USART1)
 // This Interrupt is implemented in Communication.c
 void USART1_IRQHandler(void);
@@ -28,6 +29,9 @@ void TIM7_IRQHandler(void);
 
 // Interrupt handler for external startup interrupt
 void EXTI1_IRQHandler(void);
+
+// Interrupt handler for collision avoidance
+void TIM8_TRG_COM_TIM14_IRQHandler(void);
 
 //--------------------------------------------- Some funtions for local time calculations --------------------------------------//
 uint32_t getLocalTime(void);

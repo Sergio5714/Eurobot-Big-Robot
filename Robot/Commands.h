@@ -11,6 +11,7 @@ extern float robotCoordCs1[3];
 extern float robotCoordCsGlobal[3];
 extern float accelerationMax[3];
 extern Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
+extern Range_Finders_Struct_Typedef rangeFinders;
 
 enum
 {
@@ -47,6 +48,8 @@ enum
 	TAKE_LAST_CUBE                = 0xB5,
 	
 	ODOMETRY_MOVEMENT             = 0xA2,
+	
+	GET_DATA_FOR_CALIBR           = 0xD0,
 	
 };
 

@@ -99,16 +99,13 @@ enum regAddr
 //--------------------------------------------- High level functions -------------------------------------------//
 
 // Initialization sensors for optical switch mode (new sample event interrupt without physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr, uint8_t interruptDistanceLow, uint8_t interruptDistanceHigh);
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr);
 
 // Initialization sensor for collision avoidance mode (Low level physical interrupt)
 ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t interruptDistanceLow);
 
 // Change address
 ErrorStatus rangeFinderChangeAddress(uint8_t addr, uint8_t newAddress);
-
-// Return Status
-ErrorStatus rangeFinderGetStatusOfSensor(uint8_t addr, uint8_t* value);
 
 // Return interrupt status 
 ErrorStatus rangeFinderCheckInterruptStatusOfSensor(uint8_t addr, uint8_t* answer, Rangefinder_Interrupt_Status_Typedef referenceStatus);

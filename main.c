@@ -13,17 +13,15 @@ uint32_t numberOfReceivedPackages;
 uint32_t numberOfChecksumErrors;
 uint32_t numberOfSmallLengthErrors;
 
-uint32_t startTime;
-uint32_t readDuration;
-uint32_t reinitDuration;
+uint32_t prevMeasTime;
+uint32_t timeDuration;
+
 
 int main()
-{		
-   	boardInitAll();
+{	
+    boardInitAll();
 	initManipulators();
 	Robot.forwardKinCalcStatusFlag = 0x01;
-	initRangeFindersGlobally();
-	
 	while (1)
 	{
 		switch(getPackage())
@@ -39,19 +37,6 @@ int main()
 			default:
 				break;
 		};
-		checkCommandAndExecute();
-		
-		// get local time
-		startTime = getLocalTime();
-		
-		readRangesGlobally();
-		
-		// calculate duration of read function
-		readDuration = getLocalTime() - startTime;
-		
-		
-		checkRangeFindersReinitFlags();
-		// calculate duration of reinitialization
-		reinitDuration = getLocalTime() - startTime - readDuration;
+		checkCommandAndExecute();		
 	}
 }

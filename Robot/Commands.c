@@ -1,7 +1,7 @@
 #include "Commands.h"
 extern Command_Struct inputCommand;
 extern RobotStatus Robot;
-
+	
 void checkCommandAndExecute()
 {
 	if (inputCommand.status == 0x00)
@@ -359,6 +359,21 @@ void checkCommandAndExecute()
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
+		case GET_DATA_FOR_CALIBR:
+		{
+			// Check if no params are received
+			if (inputCommand.numberOfreceivedParams != 0x00)
+				break;
+			uint8_t i;
+			uint8_t buf[6];
+			for (i = 0x00; i < NUMBER_OF_RANGE_FINDERS_FOR_CALIBR; i++)
+			{
+				buf[i] = rangeFinders.dataForCalibration[i];
+			}
+			// Send answer
+			sendAnswer(inputCommand.command, buf, 0x06);
 			break;
 		}
 	}
