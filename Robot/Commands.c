@@ -284,15 +284,25 @@ void checkCommandAndExecute()
 				// Second manipulator has no door
 				return;
 			}
-			// Read state
-			uint8_t state = inputCommand.params[1];
-			if (state)
+			// Read position
+			uint8_t mode = inputCommand.params[1];
+			switch (mode)
 			{
-				setManipHighLevelCommand(OPEN_DOOR_COMMAND, number, &cubeManipulators[number]);
-			}
-			else
-			{
-				setManipHighLevelCommand(CLOSE_DOOR_COMMAND, number, &cubeManipulators[number]);
+				case 0x00:
+				{
+					setManipHighLevelCommand(CLOSE_DOOR_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
+				case 0x01:
+				{
+					setManipHighLevelCommand(OPEN_DOOR_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
+				case 0x02:
+				{
+					setManipHighLevelCommand(OPEN_DOOR_SLIGHTLY_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
 			}
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
@@ -355,26 +365,62 @@ void checkCommandAndExecute()
 				speed[i] = *(__packed float*)(inputCommand.params + 0x04*i + 0x0C);
 				acceleration[i] = accelerationMax[i];
 			}
+			// If distance is extremly small apply three times more acceleration for x and y
+			if (distance[0] <= ODOMETRY_MOVEMENT_SMALL_DIST_THRES)
+			{
+				acceleration[0] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEl_FACTOR * acceleration[0];
+			}
+			if (distance[1] <= ODOMETRY_MOVEMENT_SMALL_DIST_THRES)
+			{
+				acceleration[1] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEl_FACTOR * acceleration[1];
+			}
 			startMovementRobotCs1(&distance[0], &speed[0], &acceleration[0]);
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);
 			break;
 		}
-		case GET_DATA_FOR_CALIBR:
+		case GET_DATA_AND_STATUS_FROM_RF:
 		{
 			// Check if no params are received
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
 			uint8_t i;
-			uint8_t buf[6];
+			uint8_t buf[NUMBER_OF_RANGE_FINDERS * 2];
+			// Copy data from rangeFinders for collision avoidance
+			for (i = 0x00; i < RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR + 0x01; i++)
+			{
+				buf[i] = rangeFinders.rangeValues[i];
+			}
+			// Copy data from rangefinders from calibration
 			for (i = 0x00; i < NUMBER_OF_RANGE_FINDERS_FOR_CALIBR; i++)
 			{
-				buf[i] = rangeFinders.dataForCalibration[i];
+				buf[i + RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR + 0x01] = rangeFinders.dataForCalibration[i];
+			}
+			// Copy status bytes
+			for (i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
+			{
+				buf[i + NUMBER_OF_RANGE_FINDERS] = rangeFinders.errorFlags[i];
 			}
 			// Send answer
-			sendAnswer(inputCommand.command, buf, 0x06);
+			sendAnswer(inputCommand.command, buf, NUMBER_OF_RANGE_FINDERS * 2);
 			break;
+		case TURN_COLL_AVOID_ON_OFF:
+		{
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			if (inputCommand.params[0] > 0x00)
+			{
+				Robot.collisionAvoidanceStatusFlag = 0x01;
+			}
+			else
+			{
+				Robot.collisionAvoidanceStatusFlag = 0x00;
+			}
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
 		}
 	}
 	// Command is already executed

@@ -7,7 +7,7 @@ extern I2C_Module_With_State_Typedef I2CModule;
 
 //--------------------------------------------- High level functions -------------------------------------------//
 // Initialization sensors for optical switch mode (new sample event interrupt without physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr)
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleOpticalSwitchMode(uint8_t addr)
 {
 	// Check if system is under reset or not
  	uint8_t buf;
@@ -52,8 +52,13 @@ ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr)
 		{
 			return ERROR;
 		}
-//		// Enable GPIO1 interrupt output (active - high)
-//		if (rangeFinderWriteReg(SYSTEM_MODE_GPIO1, 0x30, addr) != SUCCESS)
+		// Turn  SNR check
+		if (rangeFinderWriteReg(SYSRANGE_RANGE_CHECK_ENABLES, 0x10, addr) != SUCCESS)
+		{
+			return ERROR;
+		}
+//		// Write early convergence estimate value
+//		if (rangeFinderWriteReg16(SYSRANGE_EARLY_CONVERGENCE_ESTIMATE, EARLY_CONVEREGENCE_ESTIMATE_VALUE, addr) != SUCCESS)
 //		{
 //			return ERROR;
 //		}
@@ -92,8 +97,8 @@ ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr)
 	//return SUCCESS;
 }
 
-// Initialization sensor for collision avoidance mode (Low level physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t interruptDistanceLow)
+// Initialization sensor for collision avoidance mode
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleColAvoidMode(uint8_t addr)
 {
 	// Check if system is under reset or not
  	uint8_t buf;
@@ -137,26 +142,24 @@ ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t
 		if (rangeFinderWriteReg(SYSRANGE_MAX_CONVERGENCE_TIME, 0x0D, addr) != SUCCESS)
 		{
 			return ERROR;
-		}
-//		// Enable GPIO1 interrupt output (active - high)
-//		if (rangeFinderWriteReg(SYSTEM_MODE_GPIO1, 0x30, addr) != SUCCESS)
-//		{
-//			return ERROR;
-//		}
-		
+		}	
 		// Indicate that data will be updated (Flag set over I2C to indicate that data is being updated)
 		if (rangeFinderWriteReg(SYSTEM_GROUPED_PARAMETER_HOLD, 0x01, addr) != SUCCESS)
 		{
 			return ERROR;
 		}
-		
-		// Configure interrupt on 'Level Low (value < thresh_low)'
-		if (rangeFinderWriteReg(SYSTEM_INTERRUPT_CONFIG_GPIO, 0x01, addr) != SUCCESS)
+		// Turn on SNR check
+		if (rangeFinderWriteReg(SYSRANGE_RANGE_CHECK_ENABLES, 0x10, addr) != SUCCESS)
 		{
 			return ERROR;
 		}
-		// Configure level low value  for range
-		if (rangeFinderWriteReg(SYSRANGE_THRESH_LOW, interruptDistanceLow, addr) != SUCCESS)
+//		// Write early convergence estimate value
+//		if (rangeFinderWriteReg16(SYSRANGE_EARLY_CONVERGENCE_ESTIMATE, EARLY_CONVEREGENCE_ESTIMATE_VALUE, addr) != SUCCESS)
+//		{
+//			return ERROR;
+//		}
+		// Configure interrupt on New Sample event mode
+		if (rangeFinderWriteReg(SYSTEM_INTERRUPT_CONFIG_GPIO, 0x04, addr) != SUCCESS)
 		{
 			return ERROR;
 		}
@@ -213,10 +216,14 @@ ErrorStatus rangeFinderCheckInterruptStatusOfSensor(uint8_t addr, uint8_t* answe
 	{
 		*answer = 0x00;
 	}
-	// Clear interrupt
-	if(rangeFinderWriteReg(SYSTEM_INTERRUPT_CLEAR, 0x07, addr) != SUCCESS)
+	// If interrupt was then clear it
+	if (*answer == 0x01)
 	{
-		return ERROR;
+		// Clear interrupt
+		if(rangeFinderWriteReg(SYSTEM_INTERRUPT_CLEAR, 0x07, addr) != SUCCESS)
+		{
+			return ERROR;
+		}
 	}
 	return SUCCESS;
 }
@@ -270,6 +277,19 @@ ErrorStatus rangeFinderReadMeasuredRange(uint8_t addr, uint8_t* value)
 	{
 		return ERROR;
 	}
+	return SUCCESS;
+}
+
+// Read device ready status byte
+ErrorStatus rangeFinderReadRangeReadyStatus(uint8_t addr, uint8_t* value)
+{
+	// Read value of range device ready status byte
+ 	if(rangeFinderReadReg(RESULT_RANGE_STATUS, value, addr) != SUCCESS)
+	{
+		return ERROR;
+	}
+	// Apply mask
+	//*value &= 0x01;
 	return SUCCESS;
 }
 
@@ -425,21 +445,21 @@ static ErrorStatus rangeFinderWriteReg(uint16_t reg, uint8_t value, uint8_t addr
 }
  
 // // Write a 16-bit value to register
-//static ErrorStatus rangeFinderWriteReg16(uint16_t reg, uint16_t value, uint8_t addr)
-//{
-//	uint8_t buf[4];
-//	buf[0] = (reg >> 8) & MASK_8_BITS;
-//	buf[1] = reg & MASK_8_BITS;
-//	buf[2] = (value >> 8) & MASK_8_BITS;
-//	buf[3] = value & MASK_8_BITS;
-//	
-//	if (I2CSendBytes(&I2CModule, buf, 0x04, addr) != SUCCESS)
-//	{
-//		return ERROR;
-//	}
-//	return SUCCESS;
-//}
-// 
+static ErrorStatus rangeFinderWriteReg16(uint16_t reg, uint16_t value, uint8_t addr)
+{
+	uint8_t buf[4];
+	buf[0] = (reg >> 8) & MASK_8_BITS;
+	buf[1] = reg & MASK_8_BITS;
+	buf[2] = (value >> 8) & MASK_8_BITS;
+	buf[3] = value & MASK_8_BITS;
+	
+	if (I2CSendBytes(&I2CModule, buf, 0x04, addr) != SUCCESS)
+	{
+		return ERROR;
+	}
+	return SUCCESS;
+}
+ 
 // // Write a 32-bit value to register
 //static ErrorStatus rangeFinderWriteReg32(uint16_t reg, uint32_t value, uint8_t addr)
 //{

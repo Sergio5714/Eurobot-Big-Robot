@@ -27,6 +27,9 @@ float robotTargetMotorSpeedCs1[ROBOT_NUMBER_OF_MOTORS];
 float const accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
 float const accelerationMax[3] = {ODOMETRY_MOVEMENT_ACCELERATION_X, ODOMETRY_MOVEMENT_ACCELERATION_Y, ODOMETRY_MOVEMENT_ACCELERATION_W};
 
+// Time of last odometry data acquisition
+uint32_t timeofLastOdometryDataAcquisition;
+
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
 // Calculate robot speed and coordinates in global coordinate system by using speeds in robot's coordinate system
@@ -58,6 +61,8 @@ void readEnc(void)
 	uint8_t i;
 	// Buffer for encoders' ticks
 	int16_t encTicksBuf[ROBOT_NUMBER_OF_MOTORS];
+	// Time interval between current and last data acquisition
+	float timeIntervalSec;
 	
 	#ifdef ENCODER_IMITATION
 	// Imitation of movement
@@ -74,15 +79,19 @@ void readEnc(void)
 		*encCnt[i] = ENCODER_CNT_INITIAL_VALUE;
 	}
 	
+	// Calculate time interval between current and last data acquisition
+	timeIntervalSec = (float)(getTimeDifference(timeofLastOdometryDataAcquisition)) / 10000;
+	timeofLastOdometryDataAcquisition = getLocalTime();
+	
 	// Calculate speeds
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
 		// Actually now it is only motor's speed, but not wheel speed
-		wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT;
+		wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT / (timeIntervalSec);
 		// Now one motor (1st and 4rd) is especial (20.02.2018)
 		if ((i == 0) || (i == 3))
 		{
-			wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG;	
+			wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG / timeIntervalSec;	
 		}
 	}
 	#endif
@@ -97,7 +106,7 @@ void readEnc(void)
 	// Calculate instanteneous coordinates in robot cpprdinate system
 	for (i = 0x00; i < 0x03; i++)
 	{
-		robotCoordCs1[i] += robotSpeedCs1[i] * MOTOR_CONTROL_PERIOD;
+		robotCoordCs1[i] += robotSpeedCs1[i] * timeIntervalSec;
 	}
 	normalizeAngle(&robotCoordCs1[2]);
 	return;

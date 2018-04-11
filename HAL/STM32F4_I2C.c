@@ -172,7 +172,7 @@ static I2C_Status_Typedef I2CStart(I2C_Module_With_State_Typedef* I2Cx)
 			I2CWaitForStopToBeCleared(&I2CModule);
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			// Generate stop condition
 			I2CStop(I2CModule.module);
@@ -205,7 +205,7 @@ static I2C_Status_Typedef I2CSendAddr(I2C_Module_With_State_Typedef* I2Cx, uint8
 			I2CWaitForStopToBeCleared(&I2CModule);
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			// Generate stop condition
 			I2CStop(I2CModule.module);
@@ -232,7 +232,7 @@ static I2C_Status_Typedef I2CWaitForByte(I2C_Module_With_State_Typedef* I2Cx)
 			I2CWaitForStopToBeCleared(&I2CModule);
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			// Generate stop condition
 			I2CStop(I2CModule.module);
@@ -259,7 +259,7 @@ static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 			I2CWaitForStopToBeCleared(&I2CModule);
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			// Generate stop condition
 			I2CStop(I2CModule.module);
@@ -283,7 +283,7 @@ I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx
 		{
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			I2Cx->status = I2C_TIMEOUT_ERROR;
 			return I2C_TIMEOUT_ERROR;
@@ -306,7 +306,7 @@ static I2C_Status_Typedef I2CWaitBusyLine(I2C_Module_With_State_Typedef* I2Cx)
 			I2CWaitForStopToBeCleared(&I2CModule);
 			return I2Cx->status;
 		}
-		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_MS))
+		if (checkTimeout(startTime, I2C_TIMEOUT_VALUE_TENTH_OF_MS))
 		{
 			// Generate stop condition
 			I2CStop(I2CModule.module);
