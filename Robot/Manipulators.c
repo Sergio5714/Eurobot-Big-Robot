@@ -24,6 +24,9 @@ Manipulator_Subtasks_Typedef openDoorTaskSeq[] = {SUBTASK_OPEN_DOOR, SUBTASK_TER
 // Task sequence to close the door
 Manipulator_Subtasks_Typedef closeDoorTaskSeq[] = {SUBTASK_CLOSE_DOOR, SUBTASK_TERMINATOR};
 
+// Task sequence to open the door a little bit
+Manipulator_Subtasks_Typedef openDoorSlightlyTaskSeq[] = {SUBTASK_OPEN_DOOR_SLIGHTLY, SUBTASK_TERMINATOR};
+
 // Task sequence torelease magic cube
 Manipulator_Subtasks_Typedef releaseMagicCubeTaskSeq[] = {SUBTASK_PUSH_MAGIC_CUBE, SUBTASK_RETURN_MAGIC_CUBE, SUBTASK_TERMINATOR};
 
@@ -32,9 +35,8 @@ Manipulator_Subtasks_Typedef taskTerminator = SUBTASK_TERMINATOR;
 // Timer interrupt handler for servoChecker
 void TIM5_IRQHandler(void)
 {
-
 	if (SERVO_CHECKER_TIM_MODULE->SR & TIM_SR_UIF)
-	{	
+	{	  
 		timClearStatusRegisterFlag(SERVO_CHECKER_TIM_MODULE, TIM_SR_UIF);
 		// Check manipulators
 		execManipTasks(0x00, &cubeManipulators[0]);
@@ -60,6 +62,7 @@ void initManipulators(void)
 	cubeManipulators[0].door.id = MANIP_LEFT_SERVO_DOOR_ID;
 	cubeManipulators[0].door.closedAngle = MANIP_LEFT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[0].door.openedAngle  = MANIP_LEFT_SERVO_DOOR_OPENED_POS;
+	cubeManipulators[0].door.openedSlightlyAngle  = MANIP_LEFT_SERVO_DOOR_OPENED_SLIGHTLY_POS;
 	cubeManipulators[0].magicCube.id = MANIP_LEFT_SERVO_MAGIC_CUBE_ID;
 	cubeManipulators[0].magicCube.initialPosition = MANIP_LEFT_SERVO_MAGIC_CUBE_INITIAL_POS;
 	cubeManipulators[0].magicCube.finalPosition = MANIP_LEFT_SERVO_MAGIC_CUBE_FINAL_POS;
@@ -84,6 +87,7 @@ void initManipulators(void)
 	cubeManipulators[2].door.id = MANIP_RIGHT_SERVO_DOOR_ID;
 	cubeManipulators[2].door.closedAngle = MANIP_RIGHT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[2].door.openedAngle  = MANIP_RIGHT_SERVO_DOOR_OPENED_POS;
+	cubeManipulators[2].door.openedSlightlyAngle  = MANIP_RIGHT_SERVO_DOOR_OPENED_SLIGHTLY_POS;
 	cubeManipulators[2].magicCube.id = MANIP_RIGHT_SERVO_MAGIC_CUBE_ID;
 	cubeManipulators[2].magicCube.initialPosition = MANIP_RIGHT_SERVO_MAGIC_CUBE_INITIAL_POS;
 	cubeManipulators[2].magicCube.finalPosition = MANIP_RIGHT_SERVO_MAGIC_CUBE_FINAL_POS;
@@ -142,7 +146,7 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 //			servoChecker->statusFlag = SERVO_CHECKER_ERROR_WRONG_POSITION;
 //			return;
 //		}
-		else if (checkTimeout(servoChecker->startTimeMillis, SERVO_CHECKER_TIMEOUT_MS))
+		else if (checkTimeout(servoChecker->startTime, SERVO_CHECKER_TIMEOUT_TENTH_OF_MS))
 		{
 			servoChecker->statusFlag = SERVO_CHECKER_ERROR_WRONG_POSITION;
 			return;
@@ -153,7 +157,7 @@ void checkPosServo(Servo_Checker_Typedef* servoChecker)
 
 void resetChecker(Servo_Checker_Typedef* servoChecker)
 {
-	servoChecker->startTimeMillis = 0x00;
+	servoChecker->startTime = 0x00;
 	servoChecker->servoId = 0x00;
 	servoChecker->targetPos = 0.0;
 	servoChecker->statusFlag = SERVO_CHECKER_WAITING_MODE;
@@ -250,6 +254,10 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 			servoId  = manipulator->door.id;
 			servoTargetPos = manipulator->door.openedAngle;
 			break;
+		case SUBTASK_OPEN_DOOR_SLIGHTLY:
+			servoId  = manipulator->door.id;
+			servoTargetPos = manipulator->door.openedSlightlyAngle;	
+			break;		
 		case SUBTASK_CLOSE_DOOR:
 			servoId  = manipulator->door.id;
 			servoTargetPos = manipulator->door.closedAngle;
@@ -289,7 +297,7 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 	servoChecker[number].targetPos = servoTargetPos;
 	servoChecker[number].previousPos = servoCurrentPos;
 	servoChecker[number].statusFlag = SERVO_CHECKER_ACTIVE_MODE;
-	servoChecker[number].startTimeMillis = getLocalTime();
+	servoChecker[number].startTime = getLocalTime();
 	// Extend timer
 	timEnable(SERVO_CHECKER_TIM_MODULE);
 	return;
@@ -325,6 +333,9 @@ void setManipHighLevelCommand(Manipulator_Command_Typedef command, uint8_t numbe
 			break;
 		case OPEN_DOOR_COMMAND:
 			manipulator->tasksSequencePtr = openDoorTaskSeq;
+			break;
+		case OPEN_DOOR_SLIGHTLY_COMMAND:
+			manipulator->tasksSequencePtr = openDoorSlightlyTaskSeq;
 			break;
 		case CLOSE_DOOR_COMMAND:
 			manipulator->tasksSequencePtr = closeDoorTaskSeq;

@@ -3,15 +3,15 @@
  
 #include "stm32f4xx.h"
 
-#define RANGEFINDER_DEFAULT_ADDR         0x29
+#define RANGEFINDER_DEFAULT_ADDR           0x29
 
-#define MASK_8_BITS                      0xFF
-#define BIT2_MASK                        0x04 // P.S. BIT 0 exists
+#define MASK_8_BITS                        0xFF
+#define BIT2_MASK                          0x04  // P.S. BIT 0 exists
 
-#define MEASUREMENT_TIMEOUT              0x32 // 50 milliseconds
+#define MEASUREMENT_TIMEOUT                0x1F4 // equals 50 milliseconds
 
-#define LEVEL_LOW_RANGE_INTERRUPT_VALUE  0xC8 // 200 mm  
-#define LEVEL_HIGH_RANGE_INTERRUPT_VALUE 0x64 // 100 mm
+#define LEVEL_LOW_RANGE_INTERRUPT_VALUE    0xC8  // 200 mm 
+#define EARLY_CONVEREGENCE_ESTIMATE_VALUE  0x3E8  // 1000
 
 typedef enum
 {
@@ -98,11 +98,11 @@ enum regAddr
 
 //--------------------------------------------- High level functions -------------------------------------------//
 
-// Initialization sensors for optical switch mode (new sample event interrupt without physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptNewSampleMode(uint8_t addr);
+// Initialization of sensor for optical switch mode (new sample event interrupt without physical interrupt)
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleOpticalSwitchMode(uint8_t addr);
 
-// Initialization sensor for collision avoidance mode (Low level physical interrupt)
-ErrorStatus rangeFinderInitContiniousInterruptLevelLowMode(uint8_t addr, uint8_t interruptDistanceLow);
+// Initialization of sensor for collision avoidance mode (new sample normal operation mode)
+ErrorStatus rangeFinderInitContiniousInterruptNewSampleColAvoidMode(uint8_t addr);
 
 // Change address
 ErrorStatus rangeFinderChangeAddress(uint8_t addr, uint8_t newAddress);
@@ -118,6 +118,9 @@ ErrorStatus rangeFinderStartContiniousMeasurements(uint8_t addr);
 
 // Read value after measurement
 ErrorStatus rangeFinderReadMeasuredRange(uint8_t addr, uint8_t* value);
+
+// Read device ready status byte
+ErrorStatus rangeFinderReadRangeReadyStatus(uint8_t addr, uint8_t* value);
 
 // Read raw value (without crosstalk calibration)
 ErrorStatus rangeFinderReadMeasuredRangeRaw(uint8_t addr, uint8_t* value);

@@ -49,7 +49,9 @@ enum
 	
 	ODOMETRY_MOVEMENT             = 0xA2,
 	
-	GET_DATA_FOR_CALIBR           = 0xD0,
+	GET_DATA_AND_STATUS_FROM_RF   = 0xD0,
+	
+	TURN_COLL_AVOID_ON_OFF        = 0xe0,
 	
 };
 

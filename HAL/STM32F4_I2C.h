@@ -33,8 +33,8 @@ typedef struct
 // Macros for adresses
 #define I2C_ADDRESS(addr, mode) ((addr<<1)| mode)
 // Timeout 
-#define I2C_TIMEOUT_VALUE_MS    0x02 // 3 millisecond affordable timeout between request and answer
-#define I2C_TIMEOUT_AFTER_RESET 0x0A // 10 ms timeout after reset of I2C bus
+#define I2C_TIMEOUT_VALUE_TENTH_OF_MS        0x0A  // equals 1 millisecond affordable timeout between request and answer
+#define I2C_TIMEOUT_AFTER_RESET_TENTH_OF_MS  0x3E8 // equals 100 ms timeout after reset of I2C bus
 
 //--------------------------------------------- Initialization and reset -------------------------------------//
 

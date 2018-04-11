@@ -5,31 +5,41 @@
 #include "VL6180x.h"
 #include "Interrupts.h"
 //--------------------------------------------- Macros for proximity sensor ------------------------------------//
-#define RANGE_FINDER_RESET_DELAY_MS                0x01
-#define RANGE_FINDER_INITIAL_ADDR_TO_SETUP         RANGEFINDER_DEFAULT_ADDR + 0x01
-#define RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR  0x09 // Number of last sensor for collision avoidance
+#define RANGE_FINDER_RESET_DELAY_TENTH_OF_MS         0x02   //  equals 0.2 ms
+#define RANGE_FINDER_MCU_BOOT_DELAY_TENTH_OF_MS      0x0A   //  equals 1 ms
+#define RANGE_FINDERS_FIRST_READ_DELAY_TENTH_OF_MS   0x4E20 // equals  2000 ms
 
-#define NUMBER_OF_RANGE_FINDERS                    0x10
-#define NUMBER_OF_RANGE_FINDERS_FOR_CALIBR         0x06
+#define RANGE_FINDER_INITIAL_ADDR_TO_SETUP           RANGEFINDER_DEFAULT_ADDR + 0x01
+
+#define RANGE_FINDER_NUMBER_OF_LAST_COL_AV_SENSOR    0x09 // Number of last sensor for collision avoidance
+
+#define NUMBER_OF_RANGE_FINDERS                      0x10
+#define NUMBER_OF_RANGE_FINDERS_FOR_CALIBR           0x06
+#define NUMBER_OF_RANGE_FINDERS_FOR_COLL_AVOID       0x0A
+
+#define THRESHOLD_FOR_COLLISION_AVOIDANCE_MM         0x96 // 150
+
+// 1/sqrt(2)
+#define MAGIC_VALUE                                  0.70710678f
 //--------------------------------------------- Macros for expander --------------------------------------------//
-#define EXPANDER_INTERRUPT_I2C_ADDRESS             0x20
-#define EXPANDER_RESET_I2C_ADDRESS                 0x21
+#define EXPANDER_INTERRUPT_I2C_ADDRESS               0x20
+#define EXPANDER_RESET_I2C_ADDRESS                   0x21
 
-#define EXPANDER_REG_DIR_A                         0x00
-#define EXPANDER_REG_DIR_B                         0x10
-#define EXPANDER_REG_VALUE_A                       0x0A
-#define EXPANDER_REG_VALUE_B                       0x1A
-#define EXPANDER_REG_INTERRUPT_ON_A                0x02
-#define EXPANDER_REG_INTERRUPT_ON_B                0x12
-#define EXPANDER_REG_COMPARE_VALUE_FOR_INTER_A     0x03
-#define EXPANDER_REG_COMPARE_VALUE_FOR_INTER_B     0x13
-#define EXPANDER_REG_INTERRUPT_CONTROL_A           0x04
-#define EXPANDER_REG_INTERRUPT_CONTROL_B           0x14
-#define EXPANDER_CONFIG_REG_DEFAULT                0x0A
-#define EXPANDER_CONFIG_REG                        0x05
+#define EXPANDER_REG_DIR_A                           0x00
+#define EXPANDER_REG_DIR_B                           0x10
+#define EXPANDER_REG_VALUE_A                         0x0A
+#define EXPANDER_REG_VALUE_B                         0x1A
+#define EXPANDER_REG_INTERRUPT_ON_A                  0x02
+#define EXPANDER_REG_INTERRUPT_ON_B                  0x12
+#define EXPANDER_REG_COMPARE_VALUE_FOR_INTER_A       0x03
+#define EXPANDER_REG_COMPARE_VALUE_FOR_INTER_B       0x13
+#define EXPANDER_REG_INTERRUPT_CONTROL_A             0x04
+#define EXPANDER_REG_INTERRUPT_CONTROL_B             0x14
+#define EXPANDER_CONFIG_REG_DEFAULT                  0x0A
+#define EXPANDER_CONFIG_REG                          0x05
 //INTERRUPT CAPTURED VALUE FOR PORT REGISTER
-#define EXPANDER_REG_INT_CAP_VAL_A                 0x08
-#define EXPANDER_REG_INT_CAP_VAL_B                 0x18 
+#define EXPANDER_REG_INT_CAP_VAL_A                   0x08
+#define EXPANDER_REG_INT_CAP_VAL_B                   0x18 
 
 // Typedef for rangefinder's errors
 typedef enum
@@ -37,6 +47,7 @@ typedef enum
 	RANGE_FINDER_NO_ERROR,
 	RANGE_FINDER_ERROR_WHILE_INIT,
 	RANGE_FINDER_ERROR_WHILE_START_MEASUREMENTS,
+	RANGE_FINDER_ERROR_WHILE_REINIT,
 	RANGE_FINDER_ERROR_WHILE_OPERATION,
 } Range_Finder_Errors_Typedef;
 
@@ -74,8 +85,14 @@ ErrorStatus initRangeFindersGlobally(void);
 // Read all values of rangefinders
 ErrorStatus readRangesGlobally(void);
 
+// Read one value from rangefinder
+ErrorStatus readRange(uint8_t numberOfRangeFinder);
+
 // Check if rangefinders should be reinitialized or not
 void checkRangeFindersReinitFlags(void);
+
+// Check collision avoidance
+void checkCollisionAvoidance(void);
 
 // Make postprocessing of data from rangefinders for calibration
 void postprocessDataForCalibration(void);

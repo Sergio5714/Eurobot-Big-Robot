@@ -30,6 +30,7 @@ typedef enum
 	SUBTASK_LIFT_MANIPULATOR,
 	SUBTASK_LIFT_MANIPULATOR_INTERM,
 	SUBTASK_OPEN_DOOR,
+	SUBTASK_OPEN_DOOR_SLIGHTLY,
 	SUBTASK_CLOSE_DOOR,
 	SUBTASK_PUSH_MAGIC_CUBE,
 	SUBTASK_RETURN_MAGIC_CUBE,
@@ -41,7 +42,7 @@ typedef enum
 #define SERVO_CHECKER_ANGLE_EPS              2.0f
 #define SERVO_CHECKER_MAX_READ_REQUESTS      0x0A
 // Maximum timeout in ms
-#define SERVO_CHECKER_TIMEOUT_MS             0x708  // 1800 ms
+#define SERVO_CHECKER_TIMEOUT_TENTH_OF_MS    0x4650  // equals 1800 ms
 
 // Checker status
 typedef enum
@@ -58,7 +59,7 @@ typedef enum
 typedef struct
 {
 	uint8_t                 servoId;
-	uint32_t                startTimeMillis;
+	uint32_t                startTime;
 	float                   targetPos;
 	float                   previousPos;
 	Checker_Status_Typedef  statusFlag;
@@ -96,6 +97,7 @@ typedef struct
 {
 	uint8_t id;
 	uint16_t openedAngle;
+	uint16_t openedSlightlyAngle;
 	uint16_t closedAngle;
 } Door_Typedef;
 
@@ -119,6 +121,7 @@ typedef enum
 	UNLOAD_TOWER_COMMAND,
 	LIFT_TO_INTERMEDIATE_POS_COMMAND,
 	OPEN_DOOR_COMMAND,
+	OPEN_DOOR_SLIGHTLY_COMMAND,
 	CLOSE_DOOR_COMMAND,
 	RELEASE_MAGIC_CUBE_COMMAND,
 } Manipulator_Command_Typedef;
@@ -126,45 +129,47 @@ typedef enum
 //--------------------------------------------- Macros for servos ------------------------------------------------//
 // P.S Left, right and central manipulators when we are in front of robot
 // ID of servo motors
-#define MANIP_RIGHT_SERVO_SLIDER_ID               0x01  // id = 1
-#define MANIP_RIGHT_SERVO_GRIPPER_ID              0x10  // id = 16
-#define MANIP_RIGHT_SERVO_MAGIC_CUBE_ID           0x14  // id = 20
-#define MANIP_RIGHT_SERVO_DOOR_ID                 0x0A  // id = 10
+#define MANIP_RIGHT_SERVO_SLIDER_ID                 0x01  // id = 1
+#define MANIP_RIGHT_SERVO_GRIPPER_ID                0x10  // id = 16
+#define MANIP_RIGHT_SERVO_MAGIC_CUBE_ID             0x14  // id = 20
+#define MANIP_RIGHT_SERVO_DOOR_ID                   0x0A  // id = 10
 
-#define MANIP_LEFT_SERVO_SLIDER_ID                0x02  // id = 2
-#define MANIP_LEFT_SERVO_GRIPPER_ID               0x11  // id = 17
-#define MANIP_LEFT_SERVO_MAGIC_CUBE_ID            0x15  // id = 21
-#define MANIP_LEFT_SERVO_DOOR_ID                  0x0B  // id = 11
+#define MANIP_LEFT_SERVO_SLIDER_ID                  0x02  // id = 2
+#define MANIP_LEFT_SERVO_GRIPPER_ID                 0x11  // id = 17
+#define MANIP_LEFT_SERVO_MAGIC_CUBE_ID              0x15  // id = 21
+#define MANIP_LEFT_SERVO_DOOR_ID                    0x0B  // id = 11
 
-#define MANIP_CENTRAL_SERVO_SLIDER_ID             0x03  // id = 3 
-#define MANIP_CENTRAL_SERVO_GRIPPER_ID            0x12  // id = 18
+#define MANIP_CENTRAL_SERVO_SLIDER_ID               0x03  // id = 3 
+#define MANIP_CENTRAL_SERVO_GRIPPER_ID              0x12  // id = 18
 
 // Boundary angles
-#define MANIP_RIGHT_SERVO_SLIDER_TOP_POS          0x19  // 25°
-#define MANIP_RIGHT_SERVO_SLIDER_BOT_POS          0x127 // 295°
-#define MANIP_RIGHT_SERVO_SLIDER_INTERM_POS       0xF5  // 245°
-#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS      0x104 // 260°
-#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS      0x8C  // 140°
-#define MANIP_RIGHT_SERVO_MAGIC_CUBE_INITIAL_POS  0xF5  // 245°
-#define MANIP_RIGHT_SERVO_MAGIC_CUBE_FINAL_POS    0x12C // 300°
-#define MANIP_RIGHT_SERVO_DOOR_OPENED_POS         0xE6  // 230°
-#define MANIP_RIGHT_SERVO_DOOR_CLOSED_POS         0x97  // 151°
+#define MANIP_RIGHT_SERVO_SLIDER_TOP_POS            0x19  // 25°
+#define MANIP_RIGHT_SERVO_SLIDER_BOT_POS            0x127 // 295°
+#define MANIP_RIGHT_SERVO_SLIDER_INTERM_POS         0xF5  // 245°
+#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS        0x104 // 260°
+#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS        0x8C  // 140°
+#define MANIP_RIGHT_SERVO_MAGIC_CUBE_INITIAL_POS    0xF5  // 245°
+#define MANIP_RIGHT_SERVO_MAGIC_CUBE_FINAL_POS      0x12C // 300°
+#define MANIP_RIGHT_SERVO_DOOR_OPENED_POS           0xE6  // 230°
+#define MANIP_RIGHT_SERVO_DOOR_OPENED_SLIGHTLY_POS  0x9C  // 156°
+#define MANIP_RIGHT_SERVO_DOOR_CLOSED_POS           0x97  // 151°
 
-#define MANIP_LEFT_SERVO_SLIDER_TOP_POS           0x11D // 285°
-#define MANIP_LEFT_SERVO_SLIDER_BOT_POS           0x14  // 20°
-#define MANIP_LEFT_SERVO_SLIDER_INTERM_POS        0x3C  // 60°
-#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS       0x69  // 105°
-#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS       0xF5  // 245°
-#define MANIP_LEFT_SERVO_MAGIC_CUBE_INITIAL_POS   0x46  // 70°
-#define MANIP_LEFT_SERVO_MAGIC_CUBE_FINAL_POS     0x00  // 0°
-#define MANIP_LEFT_SERVO_DOOR_OPENED_POS          0x46  // 70°
-#define MANIP_LEFT_SERVO_DOOR_CLOSED_POS          0x93  // 147°
+#define MANIP_LEFT_SERVO_SLIDER_TOP_POS             0x11D // 285°
+#define MANIP_LEFT_SERVO_SLIDER_BOT_POS             0x14  // 20°
+#define MANIP_LEFT_SERVO_SLIDER_INTERM_POS          0x3C  // 60°
+#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS         0x69  // 105°
+#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS         0xF5  // 245°
+#define MANIP_LEFT_SERVO_MAGIC_CUBE_INITIAL_POS     0x46  // 70°
+#define MANIP_LEFT_SERVO_MAGIC_CUBE_FINAL_POS       0x00  // 0°
+#define MANIP_LEFT_SERVO_DOOR_OPENED_POS            0x46  // 70°
+#define MANIP_LEFT_SERVO_DOOR_OPENED_SLIGHTLY_POS   0x8E  // 142°
+#define MANIP_LEFT_SERVO_DOOR_CLOSED_POS            0x93  // 147°
 
-#define MANIP_CENTRAL_SERVO_SLIDER_TOP_POS        0x14  // 20°  
-#define MANIP_CENTRAL_SERVO_SLIDER_BOT_POS        0x122 // 290° 
-#define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS     0xFA  // 250°
-#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS    0x8C  // 140°
-#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS    0xF0  // 240°
+#define MANIP_CENTRAL_SERVO_SLIDER_TOP_POS          0x14  // 20°  
+#define MANIP_CENTRAL_SERVO_SLIDER_BOT_POS          0x122 // 290° 
+#define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS       0xFA  // 250°
+#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS      0x8C  // 140°
+#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS      0xF0  // 240°
 
 //--------------------------------------------- FUNCTIONS ------------------------------------------------------//
 void initManipulators(void);

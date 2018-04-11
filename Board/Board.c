@@ -160,6 +160,9 @@ void boardInitAll()
 	timSettings.TIM_Prescaler = COLL_AVOID_TIM_PSC;
 	timInitBase(COLL_AVOID_TIM_MODULE, &timSettings);
 	
+	// Set one pulse mode
+	timSetOnePulseMode(COLL_AVOID_TIM_MODULE);
+	
 	// Update interrupt enable
 	timInterruptEnable(COLL_AVOID_TIM_MODULE, TIM_DIER_UIE);
 	
@@ -167,7 +170,6 @@ void boardInitAll()
 	timSettings.TIM_Period = LOCAL_TIME_TIM_ARR;
 	timSettings.TIM_Prescaler = LOCAL_TIME_TIM_PSC;
 	timInitBase(LOCAL_TIME_TIM_MODULE, &timSettings);
-	
 	
 	// Update interrupt enable
 	timInterruptEnable(LOCAL_TIME_TIM_MODULE, TIM_DIER_UIE);
@@ -180,10 +182,6 @@ void boardInitAll()
 
 	gpioInitPin(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
 	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_HIGH);
-	
-//	//--------------------------------------------- Enable Expander ----------------------------------------------//
-//	gpioInitPin(GPIOD, GPIO_Pin_0, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
-//	gpioPinSetLevel(GPIOD, GPIO_Pin_0, GPIO_LEVEL_HIGH);
 	
 	//--------------------------------------------- Enable modules -----------------------------------------------//
 	
@@ -211,31 +209,23 @@ void boardInitAll()
 	timEnable(LOCAL_TIME_TIM_MODULE);
 	// Enable Collision avoidance timer
 	timEnable(COLL_AVOID_TIM_MODULE);
-	//--------------------------------------------- Enable interrupts -------------------------------------------//
-	// Enable I2C and local time
+	
+	//--------------------------------------------- Enable interrupts to initialize rangeFinders ----------------//
+	// Enable I2C and local time interrupts
 	__NVIC_EnableIRQ(LOCAL_TIME_IRQN);
 	__NVIC_EnableIRQ(I2C_MODULE_ERROR_IRQN);
-	
-	// Priority
-	__NVIC_SetPriority(COM_USART_IRQN, 0X00);
-	__NVIC_SetPriority(LOCAL_TIME_IRQN, 0X01);
-	
-	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X02);
-	__NVIC_SetPriority(EXTI_STARTUP_IRQN, 0X02);
-	
-	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X03);
-	__NVIC_SetPriority(COLL_AVOID_IRQN, 0x04);
-	
-	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X05);
-	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X06);
 	
 	// Global enable
 	__enable_irq();
 	
-	delayMs(50);
+	//--------------------------------------------- Init  rangeFinders ------------------------------------------//
+	delayInTenthOfMs(500);
 	initRangeFindersGlobally();
-	delayMs(50);
+	delayInTenthOfMs(500);
 	
+	// Global disable
+	__disable_irq();
+	//--------------------------------------------- Enable other interrupts -------------------------------------//
 	// Enable
 	__NVIC_EnableIRQ(COM_USART_IRQN);
 	__NVIC_EnableIRQ(DYNAMIXEL_USART_IRQN);
@@ -246,5 +236,21 @@ void boardInitAll()
 	
 	__NVIC_EnableIRQ(EXTI_STARTUP_IRQN);
 	
+	//--------------------------------------------- Set prority -------------------------------------------------//
+	// Priority
+	__NVIC_SetPriority(COM_USART_IRQN, 0X01);
+	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X02);
+	__NVIC_SetPriority(LOCAL_TIME_IRQN, 0X03);
+	
+	__NVIC_SetPriority(EXTI_STARTUP_IRQN, 0X04);
+	
+	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X05);
+	__NVIC_SetPriority(COLL_AVOID_IRQN, 0x06);
+	
+	__NVIC_SetPriority(SERVO_CHECKER_IRQN, 0X07);
+	__NVIC_SetPriority(MOTOR_CONTROL_IRQN, 0X08);
+	
+	// Global enable
+	__enable_irq();
 	return;
 }

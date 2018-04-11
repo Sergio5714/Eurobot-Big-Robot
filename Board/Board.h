@@ -120,7 +120,7 @@
 #define MOTOR_CONTROL_TIM_PSC            0x14
 #define MOTOR_CONTROL_TIM_ARR            0xA410
 #define MOTOR_CONTROL_IRQN               TIM6_DAC_IRQn
-#define MOTOR_CONTROL_PERIOD             0.01f
+#define MOTOR_CONTROL_PERIOD             0.01f 
 #define MOTOR_CONTROL_PERIOD_MILLISEC    (uint32_t)(MOTOR_CONTROL_PERIOD * 1000)
 #define MOTOR_CONTROL_CALC_COEF          MOTOR_CONTROL_PERIOD/MOTOR_CONTROL_TIM_ARR
 
@@ -140,19 +140,18 @@
 #define COLL_AVOID_TIM_MODULE            TIM14
 #define COLL_AVOID_TIM_PSC               0x28
 #define COLL_AVOID_TIM_ARR               0xA410
-#define COLL_AVOID_IRQN                 TIM8_TRG_COM_TIM14_IRQn
+#define COLL_AVOID_IRQN                  TIM8_TRG_COM_TIM14_IRQn
 #define COLL_AVOID_PERIOD                0.02f
-#define COLL_AVOID_PERIOD_MILLISEC      (uint32_t)(COLL_AVOID_PERIOD  * 1000)
+#define COLL_AVOID_PERIOD_MILLISEC       (uint32_t)(COLL_AVOID_PERIOD  * 1000)
 
 
-//--------------------------------------------- Timer for local time in ms (1000 Hz) -------------------------------------------//
-// ARR = 42000, PSC = 2, fapb1 = 42 MHZ, Frequency = 1000 Hz
+//--------------------------------------------- Timer for local time in one tenth of a ms (10000 Hz) ---------------------------//
+// ARR = 4200, PSC = 2, fapb1 = 42 MHZ, Frequency = 10000 Hz
 #define LOCAL_TIME_TIM_MODULE            TIM7
 #define LOCAL_TIME_TIM_PSC               0x02
-#define LOCAL_TIME_TIM_ARR               0xA410
+#define LOCAL_TIME_TIM_ARR               0x1068
 #define LOCAL_TIME_IRQN                  TIM7_IRQn
-#define LOCAL_TIME_PERIOD                0.01f
-#define LOCAL_TIME_TICKS_TO_SEC          0.00000238f
+#define LOCAL_TIME_PERIOD                0.0001f
 
 //--------------------------------------------- External interrupts ------------------------------------------------------------//
 

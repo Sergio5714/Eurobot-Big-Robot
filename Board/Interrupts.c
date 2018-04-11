@@ -3,10 +3,11 @@ extern RobotStatus Robot;
 extern I2C_Module_With_State_Typedef I2CModule;
 
 // Local time of Robot's operation in ms
-uint32_t timeMilliseconds = 0x00;
+uint32_t timeInOneTenthOfMillisecond = 0x00;
 
-uint32_t durationMotorControl;
 uint32_t durationCollAvoid;
+uint32_t durationMotor;
+
 
 // Interrupt handler for motor control
 void TIM6_DAC_IRQHandler(void)
@@ -14,6 +15,11 @@ void TIM6_DAC_IRQHandler(void)
 	if (MOTOR_CONTROL_TIM_MODULE->SR & TIM_SR_UIF)
 	{
 		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
+		
+		
+		// Disable interrupt of servo checkers and collision avoidance to prevent interference
+		__NVIC_DisableIRQ(SERVO_CHECKER_IRQN);
+		__NVIC_DisableIRQ(COLL_AVOID_IRQN);
 		
 		uint32_t startTime = getLocalTime();
 		
@@ -44,16 +50,28 @@ void TIM6_DAC_IRQHandler(void)
 //			}
 		}
 		
+		// Collision avoidance
+		if (Robot.collisionAvoidanceStatusFlag)
+		{
+			// Ckeck collision avoidance (correct robotTargetSpeedCs1 if it is necessary)
+			checkCollisionAvoidance();
+		}
 		// Calculation of forward kinematics
 		if (Robot.forwardKinCalcStatusFlag)
 		{
+			
 			// Calculate Forward kinematics ( robotTargetSpeedCs1 -> robotTargetMotorSpeedCs1)
 			calcForwardKin();
 			
 			// Set speeds for motors (robotTargetMotorSpeedCs1 -> PWM)
 			setMotorSpeeds();
 		}
-		durationMotorControl = startTime - getLocalTime();
+		
+		durationMotor = getLocalTime() - startTime;
+		// Enable interrupt of servo checkers and collision avoidance back
+		__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
+		__NVIC_EnableIRQ(COLL_AVOID_IRQN);
+		
 	}
 	return;
 }
@@ -61,7 +79,7 @@ void TIM6_DAC_IRQHandler(void)
 // Interrupt handler for I2C errors
 void I2C2_ER_IRQHandler()
 {
-	// Ardbitration lost error
+	// Arbitration lost error
 	if (READ_BIT(I2C_MODULE->SR1, I2C_SR1_ARLO))
 	{
 		// Clear bit
@@ -95,8 +113,8 @@ void TIM7_IRQHandler()
 	{
 		timClearStatusRegisterFlag(LOCAL_TIME_TIM_MODULE, TIM_SR_UIF);
 		
-		// Increase absolute time in milliseconds
-		timeMilliseconds ++;
+		// Increase absolute time by one tenth of a millisecond
+		timeInOneTenthOfMillisecond ++;
 	}
 	 return;
 }
@@ -120,16 +138,20 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
 	if (COLL_AVOID_TIM_MODULE->SR & TIM_SR_UIF)
 	{
-		if (getLocalTime() > 2000)
+		uint32_t startTime = getLocalTime();
+		timClearStatusRegisterFlag(COLL_AVOID_TIM_MODULE, TIM_SR_UIF);
+		if (getLocalTime() > RANGE_FINDERS_FIRST_READ_DELAY_TENTH_OF_MS)
 		{
 			uint32_t startTime = getLocalTime();
-			timClearStatusRegisterFlag(COLL_AVOID_TIM_MODULE, TIM_SR_UIF);
+			// Acquire rangefinder's measurements
 			readRangesGlobally();
 			postprocessDataForCalibration();
-			//checkRangeFindersReinitFlags();
-			durationCollAvoid  = getLocalTime() - startTime;
+			// Check if initialization is needed
+			checkRangeFindersReinitFlags();
+			durationCollAvoid = getLocalTime() - startTime;
 		}
-		
+		timEnable(COLL_AVOID_TIM_MODULE);
+		durationCollAvoid = getLocalTime() - startTime;
 	}
 	 return;
 }
@@ -137,39 +159,41 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
 //--------------------------------------------- Some funtions for local time calculations --------------------------------------//
 uint32_t getLocalTime()
 {
-	return timeMilliseconds;
+	return timeInOneTenthOfMillisecond;
 }
-uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
+uint32_t getTimeDifference(uint32_t startTime)
 {
-	if (timeMilliseconds >= startTime)
+	uint32_t diff;
+	// turn off IRQN
+	__NVIC_DisableIRQ(LOCAL_TIME_IRQN);
+	if (timeInOneTenthOfMillisecond >= startTime)
 	{
-		if((timeMilliseconds - startTime) >= timeout)
-		{
-			// Timeout is exceeded
-			return 0x01;
-		}
-		else
-		{
-			// Timeout is not exceeded
-			return 0x00;	
-		}
-			
+		diff = (timeInOneTenthOfMillisecond - startTime);
 	}
 	else
 	{
-		if((timeMilliseconds + 0xFFFF - startTime) >= timeout)
-		{
-			// Timeout is exceeded
-			return 0x01;
-		}
-		else
-		{
-			// Timeout is not exceeded
-			return 0x00;	
-		}
+		diff =(0xFFFF - startTime) + timeInOneTenthOfMillisecond;
+
+	}
+	// turn IRQN back on
+	__NVIC_EnableIRQ(LOCAL_TIME_IRQN);
+	return diff;
+}
+uint8_t checkTimeout(uint32_t startTime, uint32_t timeout)
+{
+	uint32_t diff = getTimeDifference(startTime);
+	if(diff >= timeout)
+	{
+		// Timeout is exceeded
+		return 0x01;
+	}
+	else
+	{
+		// Timeout is not exceeded
+		return 0x00;	
 	}
 }
-void delayMs(uint16_t delay)
+void delayInTenthOfMs(uint16_t delay)
 {
 	uint32_t startTime = getLocalTime();
 	while(!checkTimeout(startTime, delay))
