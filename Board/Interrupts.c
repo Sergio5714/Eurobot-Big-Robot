@@ -16,7 +16,6 @@ void TIM6_DAC_IRQHandler(void)
 	{
 		timClearStatusRegisterFlag(MOTOR_CONTROL_TIM_MODULE, TIM_SR_UIF);
 		
-		
 		// Disable interrupt of servo checkers and collision avoidance to prevent interference
 		__NVIC_DisableIRQ(SERVO_CHECKER_IRQN);
 		__NVIC_DisableIRQ(COLL_AVOID_IRQN);
@@ -43,17 +42,13 @@ void TIM6_DAC_IRQHandler(void)
 		}
 		else
 		{
-			// If there is no odometry movement make decceleraton for all speeds 
-//			if (Robot.movingStatusFlag)
-//			{
-//				// TBD
-//			}
+			// TBD
 		}
 		
 		// Collision avoidance
 		if (Robot.collisionAvoidanceStatusFlag)
 		{
-			// Ckeck collision avoidance (correct robotTargetSpeedCs1 if it is necessary)
+			// Check collision avoidance (correct robotTargetSpeedCs1 if it is necessary)
 			checkCollisionAvoidance();
 		}
 		// Calculation of forward kinematics
@@ -130,6 +125,20 @@ void EXTI1_IRQHandler(void)
 		
 		// Change status of startup flag
 		Robot.startupInterruptStatusFlag = 0x01;
+	}
+}
+
+// Interrupt handler for clearing startup flag
+void EXTI0_IRQHandler(void)
+{
+	// if startup clear switch is source
+	if(EXTI->PR & (0x01 << EXTI_CLEAR_STARTUP_PIN)) 
+	{  
+		// Clear Interrupt flag
+		EXTI->PR |= 0x01 << EXTI_CLEAR_STARTUP_PIN;
+		
+		// Change status of startup flag
+		Robot.startupInterruptStatusFlag = 0x00;
 	}
 }
 

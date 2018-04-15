@@ -141,6 +141,7 @@ typedef enum
 
 #define MANIP_CENTRAL_SERVO_SLIDER_ID               0x03  // id = 3 
 #define MANIP_CENTRAL_SERVO_GRIPPER_ID              0x12  // id = 18
+#define MANIP_CENTRAL_SERVO_FUNNY_ID                0x64  // id = 100
 
 // Boundary angles
 #define MANIP_RIGHT_SERVO_SLIDER_TOP_POS            0x19  // 25°
@@ -170,6 +171,9 @@ typedef enum
 #define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS       0xFA  // 250°
 #define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS      0x8C  // 140°
 #define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS      0xF0  // 240°
+#define MANIP_CENTRAL_SERVO_FUNNY_BUTTON_POS        0x38  // 56° 
+#define MANIP_CENTRAL_SERVO_FUNNY_BEE_POS           0x8F  // 143° 
+#define MANIP_CENTRAL_SERVO_FUNNY_CLOSED_POS        0xE7  // 231°
 
 //--------------------------------------------- FUNCTIONS ------------------------------------------------------//
 void initManipulators(void);

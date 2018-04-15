@@ -2,6 +2,7 @@
 
 extern I2C_Module_With_State_Typedef I2CModule;
 extern float robotTargetSpeedCs1[3];
+extern RobotStatus Robot;
 
 
 Range_Finders_Struct_Typedef rangeFinders;
@@ -13,8 +14,8 @@ uint8_t highLevelValueToCompare[NUMBER_OF_RANGE_FINDERS_FOR_CALIBR] = {0x3C, 0x7
 //                                                                     0-60,50-120,0-60,50-120,0-60,60-130
 
 // Coordinate of sensor's vectors (x and y)
-float sensorsCoordinateCollAvoid[NUMBER_OF_RANGE_FINDERS_FOR_COLL_AVOID][2] = {{0.0f, 1.0f}, {-MAGIC_VALUE, MAGIC_VALUE}, {-1.0f, 0.0f}, {-MAGIC_VALUE, -MAGIC_VALUE}, {0.0f, -1.0f},
-                                                                               {0.0f, -1.0f}, {MAGIC_VALUE, -MAGIC_VALUE}, {1.0f, 0.0f}, {MAGIC_VALUE, MAGIC_VALUE}, {0.0f, 1.0f}};
+float sensorsCoordinateCollAvoid[NUMBER_OF_RANGE_FINDERS_FOR_COLL_AVOID][3] = {{0.0f, 1.0f, -1.0f}, {-MAGIC_VALUE, MAGIC_VALUE, 0.0f}, {-1.0f, 0.0f, 0.0f}, {-MAGIC_VALUE, -MAGIC_VALUE, 0.0f}, {0.0f, -1.0f, 1.0f},
+                                                                               {0.0f, -1.0f, -1.0f}, {MAGIC_VALUE, -MAGIC_VALUE, 0.0f}, {1.0f, 0.0f, 0.0f}, {MAGIC_VALUE, MAGIC_VALUE, 0.0f}, {0.0f, 1.0f, 1.0f}};
 //--------------------------------------------- High level functions -------------------------------------------//
 // Global initialization
 ErrorStatus initRangeFindersGlobally(void)
@@ -25,6 +26,8 @@ ErrorStatus initRangeFindersGlobally(void)
 		rangeFinders.outputExpander = EXPANDER_ERROR;
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
+		// Indicate error
+		expanderShowError();
 		return ERROR;
 	}
 	if (initExpanderInterruptMode(EXPANDER_INTERRUPT_I2C_ADDRESS) != SUCCESS)
@@ -33,6 +36,8 @@ ErrorStatus initRangeFindersGlobally(void)
 		rangeFinders.interruptExpander = EXPANDER_ERROR;
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
+		// Indicate error
+		expanderShowError();
 		return ERROR;
 	}
 	// Initialize rangefinders
@@ -58,6 +63,8 @@ ErrorStatus initRangeFindersGlobally(void)
 		}
 	}
 
+	// Indicate No error
+	expanderShowNoError();
 	return SUCCESS;
 }
 
@@ -95,6 +102,8 @@ ErrorStatus readRange(uint8_t i)
 			rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
 			// Error was recoreded into high level flag, so clear low level
 			I2CModule.status = I2C_ACTIVE_MODE;
+			// Indicate error
+			expanderShowError();
 			return ERROR;
 		}
 		// Status was received. No errors occured
@@ -110,6 +119,8 @@ ErrorStatus readRange(uint8_t i)
 				rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
 				// Error was recoreded into high level flag, so clear low level
 				I2CModule.status = I2C_ACTIVE_MODE;
+				// Indicate error
+				expanderShowError();
 				return ERROR;
 			}
 		}
@@ -125,7 +136,8 @@ ErrorStatus readRange(uint8_t i)
 			}
 			
 			rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
-				
+			// Indicate error
+			expanderShowError();
 		}
 	}
 	return SUCCESS;
@@ -152,6 +164,8 @@ void checkRangeFindersReinitFlags(void)
 			{
 				rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 			}
+			// Indicate no error
+			expanderShowNoError();
 		}
 		else
 		{
@@ -177,6 +191,8 @@ void checkRangeFindersReinitFlags(void)
 						return;
 					}
 					rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
+					// Indicate no error
+					expanderShowNoError();
 					return;
 				}
 			}
@@ -194,16 +210,41 @@ void checkCollisionAvoidance()
 	{
 		if (rangeFinders.rangeValues[i] < THRESHOLD_FOR_COLLISION_AVOIDANCE_MM)
 		{
-			// No rotation
-			robotTargetSpeedCs1[2] = 0.0f;
-			// Calculate scalar product
-			scalarProduct = sensorsCoordinateCollAvoid[i][0]*robotTargetSpeedCs1[0] + sensorsCoordinateCollAvoid[i][1]*robotTargetSpeedCs1[1];
+			if (Robot.odometryMovingStatusFlag)
+			{
+				// Check x
+				scalarProduct = sensorsCoordinateCollAvoid[i][0]*robotTargetSpeedCs1[0];
+				if (scalarProduct > 0.0f)
+				{
+					robotTargetSpeedCs1[0] = 0.0f;
+				}
+				// Ckeck y
+				scalarProduct = sensorsCoordinateCollAvoid[i][1]*robotTargetSpeedCs1[1];
+				if (scalarProduct > 0.0f)
+				{
+					robotTargetSpeedCs1[1] = 0.0f;
+				}
+			}
+			else
+			{
+				// Calculate scalar product and check linear speeds x and y 
+				scalarProduct = sensorsCoordinateCollAvoid[i][0]*robotTargetSpeedCs1[0] + sensorsCoordinateCollAvoid[i][1]*robotTargetSpeedCs1[1];
+				if (scalarProduct > 0.0f)
+				{
+					// Substract projections
+					robotTargetSpeedCs1[0] -= sensorsCoordinateCollAvoid[i][0] * scalarProduct;
+					robotTargetSpeedCs1[1] -= sensorsCoordinateCollAvoid[i][1] * scalarProduct;
+				}
+			}
+			
+			// Calculate scalar product and change rotation
+			scalarProduct = sensorsCoordinateCollAvoid[i][2]*robotTargetSpeedCs1[2];
 			if (scalarProduct > 0.0f)
 			{
-				// Substract projections
-				robotTargetSpeedCs1[0] -= sensorsCoordinateCollAvoid[i][0] * scalarProduct;
-				robotTargetSpeedCs1[1] -= sensorsCoordinateCollAvoid[i][1] * scalarProduct;
+				// Change rotation
+				robotTargetSpeedCs1[2] -= sensorsCoordinateCollAvoid[i][2] * scalarProduct;
 			}
+			
 		}
 	}
 	return;
@@ -280,6 +321,21 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor)
 	}
 	return SUCCESS;
 }
+
+// Indicate error
+void expanderShowError(void)
+{
+	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_HIGH);
+	return;
+}
+
+// Indicate error
+void expanderShowNoError(void)
+{
+	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_LOW);
+	return;
+}
+
 //--------------------------------------------- Middle level functions -----------------------------------------//
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr)

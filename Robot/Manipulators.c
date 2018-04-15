@@ -75,6 +75,10 @@ void initManipulators(void)
 	cubeManipulators[1].slider.botPos = MANIP_CENTRAL_SERVO_SLIDER_BOT_POS;
 	cubeManipulators[1].slider.topPos = MANIP_CENTRAL_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[1].slider.intermPos = MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS;
+	cubeManipulators[1].door.id = MANIP_CENTRAL_SERVO_FUNNY_ID;
+	cubeManipulators[1].door.closedAngle = MANIP_CENTRAL_SERVO_FUNNY_CLOSED_POS;
+	cubeManipulators[1].door.openedAngle  = MANIP_CENTRAL_SERVO_FUNNY_BEE_POS;
+	cubeManipulators[1].door.openedSlightlyAngle  = MANIP_CENTRAL_SERVO_FUNNY_BUTTON_POS;
 	cubeManipulators[1].tasksSequencePtr = &taskTerminator;
 	
 	cubeManipulators[2].gripper.id = MANIP_RIGHT_SERVO_GRIPPER_ID;

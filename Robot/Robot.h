@@ -12,17 +12,17 @@
 // Encoder imitation mode
 //#define ENCODER_IMITATION
 
-#define PI_NUMBER                               3.14159265358f
+#define PI_NUMBER                                 3.14159265358f
 
 // Common robot parameters
-#define ROBOT_NUMBER_OF_MOTORS                  0x04
+#define ROBOT_NUMBER_OF_MOTORS                    0x04
 
 //--------------------------------------------- Definitions for motors -----------------------------------------//
 
 // For SetMotorSpeed function to convert speed in rad/s to duty cycle (PWM)
 // PWM = A*speed + B
-#define ESCON_CALIBR_COEF_A                     0.0293824f
-#define ESCON_CALIBR_COEF_B                     0.1f
+#define ESCON_CALIBR_COEF_A                       0.0293824f
+#define ESCON_CALIBR_COEF_B                       0.1f
 
 
 // Minimum and maximum speed of motor/wheel in rad/s 
@@ -43,9 +43,9 @@
 #define MAXON_MOTOR_LONG_TOTAL_TICKS              MAXON_MOTOR_LONG_GR * MAXON_MOTOR_ENC_TICKS
 #define MAXON_MOTOR_SHORT_TOTAL_TICKS             MAXON_MOTOR_SHORT_GR * MAXON_MOTOR_ENC_TICKS
 
-// Ticks to speed per timer period (rad/(timer period)) coefficient 
-#define TICKS_TO_SPEED_COEF_LONG                  2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS)
-#define TICKS_TO_SPEED_COEF_SHORT                 2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS)
+// Ticks to rad coefficient 
+#define TICKS_TO_RAD_COEF_LONG                    2*PI_NUMBER / (MAXON_MOTOR_LONG_TOTAL_TICKS)
+#define TICKS_TO_RAD_COEF_SHORT                   2*PI_NUMBER / (MAXON_MOTOR_SHORT_TOTAL_TICKS)
 
 //--------------------------------------------- Definitions and typedefs for robot movement --------------------//
 

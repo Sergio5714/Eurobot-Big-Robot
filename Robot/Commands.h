@@ -46,12 +46,14 @@ enum
 	LIFT_MANIPULATOR_TO_INTERM    = 0xB3,
 	RELEASE_MAGIC_CUBE            = 0xB4,
 	TAKE_LAST_CUBE                = 0xB5,
+	MAKE_FUNNY_ACTION             = 0xB6,
 	
 	ODOMETRY_MOVEMENT             = 0xA2,
 	
 	GET_DATA_AND_STATUS_FROM_RF   = 0xD0,
 	
-	TURN_COLL_AVOID_ON_OFF        = 0xe0,
+	TURN_COLL_AVOID_ON_OFF        = 0xE0,
+	REBOOT_SERVOS                 = 0XE1,
 	
 };
 

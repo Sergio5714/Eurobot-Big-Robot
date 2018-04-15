@@ -350,6 +350,38 @@ void checkCommandAndExecute()
 			sendAnswer(inputCommand.command, answer, 0x02);
 			break;
 		}
+		case MAKE_FUNNY_ACTION:
+		{
+			// Check if mode is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			// Central manipulator is responsible for funny action
+			uint8_t number = 0x01;
+			// Read position
+			uint8_t mode = inputCommand.params[0];
+			switch (mode)
+			{
+				case 0x00:
+				{
+					setManipHighLevelCommand(CLOSE_DOOR_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
+				case 0x01:
+				{
+					setManipHighLevelCommand(OPEN_DOOR_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
+				case 0x02:
+				{
+					setManipHighLevelCommand(OPEN_DOOR_SLIGHTLY_COMMAND, number, &cubeManipulators[number]);
+					break;
+				}
+			}
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
 		case ODOMETRY_MOVEMENT:
 		{
 			// Check if 6 float numbers or 24 bytes are received
@@ -405,6 +437,7 @@ void checkCommandAndExecute()
 			// Send answer
 			sendAnswer(inputCommand.command, buf, NUMBER_OF_RANGE_FINDERS * 2);
 			break;
+		}
 		case TURN_COLL_AVOID_ON_OFF:
 		{
 			if (inputCommand.numberOfreceivedParams != 0x01)
@@ -421,6 +454,17 @@ void checkCommandAndExecute()
 			sendAnswer(inputCommand.command, answer, 0x02);
 			break;
 		}
+		case REBOOT_SERVOS:
+		{
+			// Check if no parameters is received
+			if (inputCommand.numberOfreceivedParams != 0x00)
+				break;
+			gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_LOW);
+			delayInTenthOfMs(10);
+			gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_HIGH);
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
 		}
 	}
 	// Command is already executed

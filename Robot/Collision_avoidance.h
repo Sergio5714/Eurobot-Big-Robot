@@ -4,6 +4,8 @@
 #include "STM32F4_I2C.h"
 #include "VL6180x.h"
 #include "Interrupts.h"
+#include "Robot.h"
+
 //--------------------------------------------- Macros for proximity sensor ------------------------------------//
 #define RANGE_FINDER_RESET_DELAY_TENTH_OF_MS         0x02   //  equals 0.2 ms
 #define RANGE_FINDER_MCU_BOOT_DELAY_TENTH_OF_MS      0x0A   //  equals 1 ms
@@ -102,6 +104,12 @@ ErrorStatus resetRangeFinder(uint8_t numberOfSensor);
 
 // Init particular rangefinder
 ErrorStatus initRangeFinder(uint8_t numberOfSensor);
+
+// Indicate error
+void expanderShowError(void);
+
+// Indicate error
+void expanderShowNoError(void);
 
 //--------------------------------------------- Middle level functions -----------------------------------------//
 

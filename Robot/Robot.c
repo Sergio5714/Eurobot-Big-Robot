@@ -27,8 +27,10 @@ float robotTargetMotorSpeedCs1[ROBOT_NUMBER_OF_MOTORS];
 float const accuracyOfMovement[3] = {MOVEMENT_XY_ACCURACY, MOVEMENT_XY_ACCURACY, MOVEMENT_ANGULAR_ACCURACY};
 float const accelerationMax[3] = {ODOMETRY_MOVEMENT_ACCELERATION_X, ODOMETRY_MOVEMENT_ACCELERATION_Y, ODOMETRY_MOVEMENT_ACCELERATION_W};
 
-// Time of last odometry data acquisition
+// Time of last odometry data acquisition (tenth of millisec)
 uint32_t timeofLastOdometryDataAcquisition;
+// Last time interval (sec)
+float lastTimeIntervalSec;
 
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
@@ -46,9 +48,9 @@ void calcGlobSpeedAndCoord(void)
 	robotSpeedCsGlobal[2] = robotSpeedCs1[2];
 								  
 	// Coordinates' increment calculation
-	robotCoordCsGlobal[0] += robotSpeedCsGlobal[0] * MOTOR_CONTROL_PERIOD;
-	robotCoordCsGlobal[1] += robotSpeedCsGlobal[1] * MOTOR_CONTROL_PERIOD;
-	robotCoordCsGlobal[2] += robotSpeedCsGlobal[2] * MOTOR_CONTROL_PERIOD;
+	robotCoordCsGlobal[0] += robotSpeedCsGlobal[0] * lastTimeIntervalSec;
+	robotCoordCsGlobal[1] += robotSpeedCsGlobal[1] * lastTimeIntervalSec;
+	robotCoordCsGlobal[2] += robotSpeedCsGlobal[2] * lastTimeIntervalSec;
 	// Normalize angle of rotation
 	normalizeAngle(&robotCoordCsGlobal[2]);
 	return;
@@ -61,8 +63,6 @@ void readEnc(void)
 	uint8_t i;
 	// Buffer for encoders' ticks
 	int16_t encTicksBuf[ROBOT_NUMBER_OF_MOTORS];
-	// Time interval between current and last data acquisition
-	float timeIntervalSec;
 	
 	#ifdef ENCODER_IMITATION
 	// Imitation of movement
@@ -80,18 +80,24 @@ void readEnc(void)
 	}
 	
 	// Calculate time interval between current and last data acquisition
-	timeIntervalSec = (float)(getTimeDifference(timeofLastOdometryDataAcquisition)) / 10000;
+	lastTimeIntervalSec = (float)(getTimeDifference(timeofLastOdometryDataAcquisition)) / 10000;
 	timeofLastOdometryDataAcquisition = getLocalTime();
+	
+	// Check for appropriate values that can possibly cause Nan errors
+	if (lastTimeIntervalSec == 0.0f)
+	{
+		return;
+	}
 	
 	// Calculate speeds
 	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
 	{
 		// Actually now it is only motor's speed, but not wheel speed
-		wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_SHORT / (timeIntervalSec);
+		wheelsSpeed[i] = (float)(encTicksBuf[i]) * TICKS_TO_RAD_COEF_SHORT / (lastTimeIntervalSec);
 		// Now one motor (1st and 4rd) is especial (20.02.2018)
 		if ((i == 0) || (i == 3))
 		{
-			wheelsSpeed[i] = encTicksBuf[i] * TICKS_TO_SPEED_COEF_LONG / timeIntervalSec;	
+			wheelsSpeed[i] = (float)(encTicksBuf[i]) * TICKS_TO_RAD_COEF_LONG / (lastTimeIntervalSec);	
 		}
 	}
 	#endif
@@ -103,10 +109,10 @@ void readEnc(void)
 	// Calculate inverse kinematics (wheelsSpeed -> robotSpeedCs1)
 	calcInverseKin();
 	
-	// Calculate instanteneous coordinates in robot cpprdinate system
+	// Calculate instanteneous coordinates in robot coordinate system
 	for (i = 0x00; i < 0x03; i++)
 	{
-		robotCoordCs1[i] += robotSpeedCs1[i] * timeIntervalSec;
+		robotCoordCs1[i] += robotSpeedCs1[i] * lastTimeIntervalSec;
 	}
 	normalizeAngle(&robotCoordCs1[2]);
 	return;
@@ -427,7 +433,7 @@ void speedRecalculation(void)
 				break;
 			
 			case ODOMETRY_MOVEMENT_ACCELERATION:
-				robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.acceleration[i] * MOTOR_CONTROL_PERIOD;
+				robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] + OdometryMovement.acceleration[i] * lastTimeIntervalSec;
 				// Constrain increase in speed if coordinate is still less than stopAccCoord[i]
 				if (fabs(robotTargetSpeedCs1[i]) > fabs(OdometryMovement.stableSpeed[i]))
 				{
@@ -451,7 +457,7 @@ void speedRecalculation(void)
 				else
 				{
 					// Decrease speed
-					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] - OdometryMovement.speedIncrement[i];
+					robotTargetSpeedCs1[i] = robotTargetSpeedCs1[i] - OdometryMovement.acceleration[i] * lastTimeIntervalSec;
 					break;
 				}
 		}

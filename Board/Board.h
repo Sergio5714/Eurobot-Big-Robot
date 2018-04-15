@@ -134,6 +134,10 @@
 #define SERVO_CHECKER_PERIOD             0.01f
 #define SERVO_CHECKER_TICKS_TO_SEC       0.00000238f
 
+//--------------------------------------------- GPIO for servo reboot ----------------------------------------------------------//
+#define SERVO_REBOOT_PIN                 GPIO_Pin_6
+#define SERVO_REBOOT_PORT                GPIOD
+
 //--------------------------------------------- Timer for collision avoidance (50 Hz) ------------------------------------------//
 
 // ARR = 42000, PSC = 40, fapb1 = 42 MHZ, Frequency = 50 Hz
@@ -144,6 +148,9 @@
 #define COLL_AVOID_PERIOD                0.02f
 #define COLL_AVOID_PERIOD_MILLISEC       (uint32_t)(COLL_AVOID_PERIOD  * 1000)
 
+//--------------------------------------------- GPIO for collision avoidance LED -----------------------------------------------//
+#define COLL_AVOID_LED_PIN               GPIO_Pin_2
+#define COLL_AVOID_LED_PORT              GPIOD
 
 //--------------------------------------------- Timer for local time in one tenth of a ms (10000 Hz) ---------------------------//
 // ARR = 4200, PSC = 2, fapb1 = 42 MHZ, Frequency = 10000 Hz
@@ -159,6 +166,11 @@
 #define EXTI_STARTUP_PORT                GPIOD
 #define EXTI_STARTUP_SOURCE_PORT         EXTI_GPIOD_SOURCE_PORT
 #define EXTI_STARTUP_PIN                 GPIO_Pin_1
+
+#define EXTI_CLEAR_STARTUP_IRQN          EXTI0_IRQn
+#define EXTI_CLEAR_STARTUP_PORT          GPIOA
+#define EXTI_CLEAR_STARTUP_SOURCE_PORT   EXTI_GPIOA_SOURCE_PORT
+#define EXTI_CLEAR_STARTUP_PIN           GPIO_Pin_0
 
 //--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
 
