@@ -5,6 +5,7 @@
 #include "stm32f4xx.h"
 
 #define NUMBER_OF_MANIPULATORS               0x03
+#define MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS 0x7530  // equals 3000  ms
 
 //--------------------------------------------- Typedefs and enums for tasks executor ---------------------------//
 

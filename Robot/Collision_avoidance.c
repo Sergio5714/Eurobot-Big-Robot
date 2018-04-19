@@ -27,7 +27,7 @@ ErrorStatus initRangeFindersGlobally(void)
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
 		// Indicate error
-		expanderShowError();
+		showError();
 		return ERROR;
 	}
 	if (initExpanderInterruptMode(EXPANDER_INTERRUPT_I2C_ADDRESS) != SUCCESS)
@@ -37,7 +37,7 @@ ErrorStatus initRangeFindersGlobally(void)
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
 		// Indicate error
-		expanderShowError();
+		showError();
 		return ERROR;
 	}
 	// Initialize rangefinders
@@ -64,7 +64,7 @@ ErrorStatus initRangeFindersGlobally(void)
 	}
 
 	// Indicate No error
-	expanderShowNoError();
+	showNoError();
 	return SUCCESS;
 }
 
@@ -103,7 +103,7 @@ ErrorStatus readRange(uint8_t i)
 			// Error was recoreded into high level flag, so clear low level
 			I2CModule.status = I2C_ACTIVE_MODE;
 			// Indicate error
-			expanderShowError();
+			showError();
 			return ERROR;
 		}
 		// Status was received. No errors occured
@@ -120,7 +120,7 @@ ErrorStatus readRange(uint8_t i)
 				// Error was recoreded into high level flag, so clear low level
 				I2CModule.status = I2C_ACTIVE_MODE;
 				// Indicate error
-				expanderShowError();
+				showError();
 				return ERROR;
 			}
 		}
@@ -137,7 +137,7 @@ ErrorStatus readRange(uint8_t i)
 			
 			rangeFinders.reinitFlags[i] = RANGE_FINDER_REINIT_IS_NECESSARY;
 			// Indicate error
-			expanderShowError();
+			showError();
 		}
 	}
 	return SUCCESS;
@@ -165,7 +165,7 @@ void checkRangeFindersReinitFlags(void)
 				rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 			}
 			// Indicate no error
-			expanderShowNoError();
+			showNoError();
 		}
 		else
 		{
@@ -179,6 +179,7 @@ void checkRangeFindersReinitFlags(void)
 					{
 						rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_REINIT;
 						I2CModule.status = I2C_ACTIVE_MODE;
+						showError();
 						return;
 					}
 					// Turn on measurements
@@ -188,11 +189,12 @@ void checkRangeFindersReinitFlags(void)
 						rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_START_MEASUREMENTS;
 						// Error was recoreded into high level flag, so clear low level
 						I2CModule.status = I2C_ACTIVE_MODE;
+						showError();
 						return;
 					}
 					rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 					// Indicate no error
-					expanderShowNoError();
+					showNoError();
 					return;
 				}
 			}
@@ -218,7 +220,7 @@ void checkCollisionAvoidance()
 				{
 					robotTargetSpeedCs1[0] = 0.0f;
 				}
-				// Ckeck y
+				// Check y
 				scalarProduct = sensorsCoordinateCollAvoid[i][1]*robotTargetSpeedCs1[1];
 				if (scalarProduct > 0.0f)
 				{
@@ -244,7 +246,6 @@ void checkCollisionAvoidance()
 				// Change rotation
 				robotTargetSpeedCs1[2] -= sensorsCoordinateCollAvoid[i][2] * scalarProduct;
 			}
-			
 		}
 	}
 	return;
@@ -320,20 +321,6 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor)
 		return ERROR;
 	}
 	return SUCCESS;
-}
-
-// Indicate error
-void expanderShowError(void)
-{
-	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_HIGH);
-	return;
-}
-
-// Indicate error
-void expanderShowNoError(void)
-{
-	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_LOW);
-	return;
 }
 
 //--------------------------------------------- Middle level functions -----------------------------------------//

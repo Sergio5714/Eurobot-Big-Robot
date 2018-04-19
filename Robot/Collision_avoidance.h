@@ -105,12 +105,6 @@ ErrorStatus resetRangeFinder(uint8_t numberOfSensor);
 // Init particular rangefinder
 ErrorStatus initRangeFinder(uint8_t numberOfSensor);
 
-// Indicate error
-void expanderShowError(void);
-
-// Indicate error
-void expanderShowNoError(void);
-
 //--------------------------------------------- Middle level functions -----------------------------------------//
 
 // Initialize expander in output mode

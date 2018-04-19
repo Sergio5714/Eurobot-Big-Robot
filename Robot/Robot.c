@@ -32,6 +32,28 @@ uint32_t timeofLastOdometryDataAcquisition;
 // Last time interval (sec)
 float lastTimeIntervalSec;
 
+// Time of Robot start
+uint32_t timeOfStart;
+
+void turnEverythingOff()
+{
+	// Global disable of interrupts
+	
+	__disable_irq();
+	
+	// Turn off dynamixels
+	gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_LOW);
+	
+	// Turn off maxons
+	uint8_t i;
+	for (i = 0x00; i < ROBOT_NUMBER_OF_MOTORS; i++)
+	{
+		// Change PWM
+		timPwmChangeDutyCycle(motorPwmCh[i].timModule, motorPwmCh[i].channel, 0.0f);
+	}
+	return;
+}
+
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 
 // Calculate robot speed and coordinates in global coordinate system by using speeds in robot's coordinate system

@@ -245,8 +245,34 @@ void checkCommandAndExecute()
 			// Check if there is no parameters
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
-			uint8_t buf = Robot.startupInterruptStatusFlag;
-			sendAnswer(inputCommand.command, (uint8_t*)&buf, 0x01);
+			// If startup flag has not been requested before check pin
+			if (!Robot.startupStatusFlag)
+			{
+				// Read level on startup pin
+				GPIO_Level_TypeDef level;
+				level = gpioPinReadInput(EXTI_STARTUP_PORT, EXTI_STARTUP_PIN);
+				if (level == GPIO_LEVEL_LOW)
+				{
+					// Match started
+					timeOfStart = getLocalTime();
+					Robot.startupStatusFlag = 0x01;
+				}
+			}
+			sendAnswer(inputCommand.command, (uint8_t*)&Robot.startupStatusFlag, 0x01);
+			break;
+		}
+		case FORCED_START:
+		{
+			// Check if there is no parameters
+			if (inputCommand.numberOfreceivedParams != 0x00)
+				break;
+			// If startup flag has not been requested before
+			if (!Robot.startupStatusFlag)
+			{
+				timeOfStart = getLocalTime();
+				Robot.startupStatusFlag = 0x01;
+			}
+			sendAnswer(inputCommand.command, (uint8_t*)&Robot.startupStatusFlag, 0x01);
 			break;
 		}
 		case TAKE_CUBE:

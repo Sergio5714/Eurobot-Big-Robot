@@ -10,6 +10,7 @@ extern float robotSpeedCs1[3];
 extern float robotCoordCs1[3];
 extern float robotCoordCsGlobal[3];
 extern float accelerationMax[3];
+extern uint32_t timeOfStart;
 extern Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 extern Range_Finders_Struct_Typedef rangeFinders;
 
@@ -39,6 +40,7 @@ enum
 	GET_ODOMETRY_MOVEMENT_STATUS  = 0xA0,
 	GET_MANIPULATOR_STATUS        = 0xA1,
 	GET_STARTUP_STATUS            = 0xA3,
+	FORCED_START                  = 0xA4,
 	
 	TAKE_CUBE                     = 0xB0,
 	UNLOAD_TOWER                  = 0xB1,
@@ -54,7 +56,6 @@ enum
 	
 	TURN_COLL_AVOID_ON_OFF        = 0xE0,
 	REBOOT_SERVOS                 = 0XE1,
-	
 };
 
 void checkCommandAndExecute(void);

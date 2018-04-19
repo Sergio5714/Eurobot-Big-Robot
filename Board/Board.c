@@ -174,7 +174,7 @@ void boardInitAll()
 	gpioInitPin(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
 	
 	// Indicate error
-	expanderShowError();
+	showError();
 	
 	//--------------------------------------------- Local time timer initialization ------------------------------//
 	timSettings.TIM_Period = LOCAL_TIME_TIM_ARR;
@@ -187,11 +187,11 @@ void boardInitAll()
 	//--------------------------------------------- External interrupts ------------------------------------------//
 	// For startup
 	gpioInitPin(EXTI_STARTUP_PORT, EXTI_STARTUP_PIN, GPIO_MODE_IN, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
-	extiInit(EXTI_STARTUP_SOURCE_PORT, EXTI_STARTUP_PIN, EXTI_INTERRUPT_MODE_FALLING);
+	//extiInit(EXTI_STARTUP_SOURCE_PORT, EXTI_STARTUP_PIN, EXTI_INTERRUPT_MODE_FALLING);
 	
 	// For clearing startup flag
-	gpioInitPin(EXTI_CLEAR_STARTUP_PORT, EXTI_CLEAR_STARTUP_PIN, GPIO_MODE_IN, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
-	extiInit(EXTI_CLEAR_STARTUP_SOURCE_PORT, EXTI_CLEAR_STARTUP_PIN, EXTI_INTERRUPT_MODE_RISING);
+	//gpioInitPin(EXTI_CLEAR_STARTUP_PORT, EXTI_CLEAR_STARTUP_PIN, GPIO_MODE_IN, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_NOPULL);
+	//extiInit(EXTI_CLEAR_STARTUP_SOURCE_PORT, EXTI_CLEAR_STARTUP_PIN, EXTI_INTERRUPT_MODE_RISING);
 	
 	//--------------------------------------------- Enable microchip for dynamixel signal pin --------------------//
 
@@ -249,8 +249,8 @@ void boardInitAll()
 	__NVIC_EnableIRQ(COLL_AVOID_IRQN);
 	__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
 	
-	__NVIC_EnableIRQ(EXTI_STARTUP_IRQN);
-	__NVIC_EnableIRQ(EXTI_CLEAR_STARTUP_IRQN);
+	//__NVIC_EnableIRQ(EXTI_STARTUP_IRQN);
+	//__NVIC_EnableIRQ(EXTI_CLEAR_STARTUP_IRQN);
 	
 	//--------------------------------------------- Set prority -------------------------------------------------//
 	// Priority
@@ -258,8 +258,8 @@ void boardInitAll()
 	__NVIC_SetPriority(DYNAMIXEL_USART_IRQN, 0X02);
 	__NVIC_SetPriority(LOCAL_TIME_IRQN, 0X03);
 	
-	__NVIC_SetPriority(EXTI_STARTUP_IRQN, 0X04);
-	__NVIC_SetPriority(EXTI_CLEAR_STARTUP_IRQN, 0X04);
+	//__NVIC_SetPriority(EXTI_STARTUP_IRQN, 0X04);
+	//__NVIC_SetPriority(EXTI_CLEAR_STARTUP_IRQN, 0X04);
 	
 	__NVIC_SetPriority(I2C_MODULE_ERROR_IRQN, 0X05);
 	__NVIC_SetPriority(COLL_AVOID_IRQN, 0x06);
@@ -269,5 +269,19 @@ void boardInitAll()
 	
 	// Global enable
 	__enable_irq();
+	return;
+}
+
+// Indicate error
+void showError(void)
+{
+	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_HIGH);
+	return;
+}
+
+// Indicate error
+void showNoError(void)
+{
+	gpioPinSetLevel(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_LEVEL_LOW);
 	return;
 }

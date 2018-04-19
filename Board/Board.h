@@ -167,10 +167,10 @@
 #define EXTI_STARTUP_SOURCE_PORT         EXTI_GPIOD_SOURCE_PORT
 #define EXTI_STARTUP_PIN                 GPIO_Pin_1
 
-#define EXTI_CLEAR_STARTUP_IRQN          EXTI0_IRQn
-#define EXTI_CLEAR_STARTUP_PORT          GPIOA
-#define EXTI_CLEAR_STARTUP_SOURCE_PORT   EXTI_GPIOA_SOURCE_PORT
-#define EXTI_CLEAR_STARTUP_PIN           GPIO_Pin_0
+//#define EXTI_CLEAR_STARTUP_IRQN          EXTI0_IRQn
+//#define EXTI_CLEAR_STARTUP_PORT          GPIOA
+//#define EXTI_CLEAR_STARTUP_SOURCE_PORT   EXTI_GPIOA_SOURCE_PORT
+//#define EXTI_CLEAR_STARTUP_PIN           GPIO_Pin_0
 
 //--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
 
@@ -181,5 +181,11 @@
 
 // Initialize all necessary peripheral devices
 void boardInitAll(void);
+
+// Indicate error
+void showError(void);
+
+// Indicate error
+void showNoError(void);
 
 #endif

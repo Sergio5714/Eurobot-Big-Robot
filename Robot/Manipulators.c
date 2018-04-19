@@ -96,6 +96,44 @@ void initManipulators(void)
 	cubeManipulators[2].magicCube.initialPosition = MANIP_RIGHT_SERVO_MAGIC_CUBE_INITIAL_POS;
 	cubeManipulators[2].magicCube.finalPosition = MANIP_RIGHT_SERVO_MAGIC_CUBE_FINAL_POS;
 	cubeManipulators[2].tasksSequencePtr = &taskTerminator;
+	
+	uint8_t i;
+	
+	// Take cubes
+	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
+	{
+		setManipHighLevelCommand(TAKE_CUBE_COMMAND, i, &cubeManipulators[i]);
+	}
+	
+	// delay
+	delayInTenthOfMs(MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS);
+	
+	// Check status
+	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
+	{
+		if (cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_SUCCESFUL_EXECUTION)
+		{
+			showError();
+		}
+	}
+	
+	// Close doors and check funny action
+	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
+	{
+		setManipHighLevelCommand(CLOSE_DOOR_COMMAND, i, &cubeManipulators[i]);
+	}
+	
+	// delay
+	delayInTenthOfMs(MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS);
+	
+	// Check status
+	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
+	{
+		if (cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_SUCCESFUL_EXECUTION)
+		{
+			showError();
+		}
+	}
 	return;
 }
 

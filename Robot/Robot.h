@@ -16,6 +16,7 @@
 
 // Common robot parameters
 #define ROBOT_NUMBER_OF_MOTORS                    0x04
+#define ROBOT_TIME_OF_MATCH_TENTH_OF_MS           0xF4240 // 100 sec
 
 //--------------------------------------------- Definitions for motors -----------------------------------------//
 
@@ -87,7 +88,7 @@ typedef struct
 	uint8_t movingStatusFlag;
 	uint8_t forwardKinCalcStatusFlag;
 	uint8_t odometryMovingStatusFlag;
-	uint8_t startupInterruptStatusFlag;
+	uint8_t startupStatusFlag;
 	uint8_t collisionAvoidanceStatusFlag;
 }RobotStatus;
 
@@ -105,6 +106,7 @@ extern float MRotSpeed[ROBOT_NUMBER_OF_MOTORS][3];
 extern float InverseKinematics[3][ROBOT_NUMBER_OF_MOTORS];
 
 //--------------------------------------------- FUNCTIONS ------------------------------------------------------//
+void turnEverythingOff(void);
 
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//
 

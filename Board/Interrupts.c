@@ -5,9 +5,6 @@ extern I2C_Module_With_State_Typedef I2CModule;
 // Local time of Robot's operation in ms
 uint32_t timeInOneTenthOfMillisecond = 0x00;
 
-uint32_t durationCollAvoid;
-uint32_t durationMotor;
-
 
 // Interrupt handler for motor control
 void TIM6_DAC_IRQHandler(void)
@@ -19,8 +16,6 @@ void TIM6_DAC_IRQHandler(void)
 		// Disable interrupt of servo checkers and collision avoidance to prevent interference
 		__NVIC_DisableIRQ(SERVO_CHECKER_IRQN);
 		__NVIC_DisableIRQ(COLL_AVOID_IRQN);
-		
-		uint32_t startTime = getLocalTime();
 		
 		// Read data from Encoders (Encoders -> wheelsSpeed (+ wheelsCoord) -> robotSpeedCs1 (+ robotCoordCs1) )
 		readEnc();
@@ -62,7 +57,6 @@ void TIM6_DAC_IRQHandler(void)
 			setMotorSpeeds();
 		}
 		
-		durationMotor = getLocalTime() - startTime;
 		// Enable interrupt of servo checkers and collision avoidance back
 		__NVIC_EnableIRQ(SERVO_CHECKER_IRQN);
 		__NVIC_EnableIRQ(COLL_AVOID_IRQN);
@@ -114,33 +108,33 @@ void TIM7_IRQHandler()
 	 return;
 }
 
-// Interrupt handler for external startup interrupt
-void EXTI1_IRQHandler(void)
-{
-	// if startup switch is source
-	if(EXTI->PR & (0x01 << EXTI_STARTUP_PIN)) 
-	{  
-		// Clear Interrupt flag
-		EXTI->PR |= 0x01 << EXTI_STARTUP_PIN;
-		
-		// Change status of startup flag
-		Robot.startupInterruptStatusFlag = 0x01;
-	}
-}
+//// Interrupt handler for external startup interrupt
+//void EXTI1_IRQHandler(void)
+//{
+//	// if startup switch is source
+//	if(EXTI->PR & (0x01 << EXTI_STARTUP_PIN)) 
+//	{  
+//		// Clear Interrupt flag
+//		EXTI->PR |= 0x01 << EXTI_STARTUP_PIN;
+//		
+//		// Change status of startup flag
+//		Robot.startupInterruptStatusFlag = 0x01;
+//	}
+//}
 
-// Interrupt handler for clearing startup flag
-void EXTI0_IRQHandler(void)
-{
-	// if startup clear switch is source
-	if(EXTI->PR & (0x01 << EXTI_CLEAR_STARTUP_PIN)) 
-	{  
-		// Clear Interrupt flag
-		EXTI->PR |= 0x01 << EXTI_CLEAR_STARTUP_PIN;
-		
-		// Change status of startup flag
-		Robot.startupInterruptStatusFlag = 0x00;
-	}
-}
+//// Interrupt handler for clearing startup flag
+//void EXTI0_IRQHandler(void)
+//{
+//	// if startup clear switch is source
+//	if(EXTI->PR & (0x01 << EXTI_CLEAR_STARTUP_PIN)) 
+//	{  
+//		// Clear Interrupt flag
+//		EXTI->PR |= 0x01 << EXTI_CLEAR_STARTUP_PIN;
+//		
+//		// Change status of startup flag
+//		Robot.startupInterruptStatusFlag = 0x00;
+//	}
+//}
 
 // Interrupt handler for collision avoidance
 void TIM8_TRG_COM_TIM14_IRQHandler(void)
@@ -157,10 +151,8 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
 			postprocessDataForCalibration();
 			// Check if initialization is needed
 			checkRangeFindersReinitFlags();
-			durationCollAvoid = getLocalTime() - startTime;
 		}
 		timEnable(COLL_AVOID_TIM_MODULE);
-		durationCollAvoid = getLocalTime() - startTime;
 	}
 	 return;
 }
