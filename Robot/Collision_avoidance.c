@@ -23,23 +23,23 @@ ErrorStatus initRangeFindersGlobally(void)
 	if (initExpanderOutputMode(EXPANDER_RESET_I2C_ADDRESS) != SUCCESS)
 	{
 		// Error arised
-		rangeFinders.outputExpander = EXPANDER_ERROR;
+		rangeFinders.outputExpanderErrorFlag = EXPANDER_ERROR;
 		// Clear low level error flag
 		I2CModule.status = I2C_ACTIVE_MODE;
 		// Indicate error
 		showError();
 		return ERROR;
 	}
-	if (initExpanderInterruptMode(EXPANDER_INTERRUPT_I2C_ADDRESS) != SUCCESS)
-	{
-		// Error arised
-		rangeFinders.interruptExpander = EXPANDER_ERROR;
-		// Clear low level error flag
-		I2CModule.status = I2C_ACTIVE_MODE;
-		// Indicate error
-		showError();
-		return ERROR;
-	}
+//	if (initExpanderInterruptMode(EXPANDER_INTERRUPT_I2C_ADDRESS) != SUCCESS)
+//	{
+//		// Error arised
+//		rangeFinders.interruptExpander = EXPANDER_ERROR;
+//		// Clear low level error flag
+//		I2CModule.status = I2C_ACTIVE_MODE;
+//		// Indicate error
+//		showError();
+//		return ERROR;
+//	}
 	// Initialize rangefinders
 	uint8_t i;
 	for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
@@ -50,6 +50,8 @@ ErrorStatus initRangeFindersGlobally(void)
 			rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_INIT;
 			// Error was recoreded into high level flag, so clear low level
 			I2CModule.status = I2C_ACTIVE_MODE;
+			// Indicate error
+			showError();
 		}
 	}
 	for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
@@ -60,6 +62,8 @@ ErrorStatus initRangeFindersGlobally(void)
 			rangeFinders.errorFlags[i] = RANGE_FINDER_ERROR_WHILE_START_MEASUREMENTS;
 			// Error was recoreded into high level flag, so clear low level
 			I2CModule.status = I2C_ACTIVE_MODE;
+			// Indicate error
+			showError();
 		}
 	}
 
@@ -147,18 +151,24 @@ void checkRangeFindersReinitFlags(void)
 {
 	uint8_t i;
 	uint8_t sum = 0x00;
+	// Check timeout after I2C reset
 	if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, I2C_TIMEOUT_AFTER_RESET_TENTH_OF_MS))
 	{
-		// Check if all rangefinders should be reinitialized at the same time
+		// Check if all rangefinders + expander should be reinitialized at the same time
 		for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 		{
 			sum += rangeFinders.reinitFlags[i];
 		}
-		// If all rangefinders should be reinitialized then there is an error with bus
-		if (sum == NUMBER_OF_RANGE_FINDERS)
+		sum += rangeFinders.outputExpanderErrorFlag;
+		// If all rangefinders + expander should be reinitialized then there is an error with bus
+		if (sum == NUMBER_OF_RANGE_FINDERS + 0x01)
 		{
 			// Reset I2C bus
 			I2CReset(&I2CModule);
+			
+			// Reset Expander
+			resetExpander();
+			
 			// Clear Reinit flags
 			for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 			{
@@ -169,6 +179,26 @@ void checkRangeFindersReinitFlags(void)
 		}
 		else
 		{
+			// Reinit expander if it is necessary
+			if (rangeFinders.outputExpanderErrorFlag == EXPANDER_ERROR)
+			{
+				if (initExpanderOutputMode(EXPANDER_RESET_I2C_ADDRESS) != SUCCESS)
+				{
+					// Error arised
+					rangeFinders.outputExpanderErrorFlag = EXPANDER_ERROR;
+					I2CModule.status = I2C_ACTIVE_MODE;
+					// Indicate error
+					showError();
+				}
+				else
+				{
+					rangeFinders.outputExpanderErrorFlag = EXPANDER_NO_ERROR;
+					// Indicate no error
+					showNoError();
+				}
+				return;
+				
+			}
 			// Initialize "stopped" rangefinders
 			for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 			{
@@ -212,7 +242,7 @@ void checkCollisionAvoidance()
 	{
 		if (rangeFinders.rangeValues[i] < THRESHOLD_FOR_COLLISION_AVOIDANCE_MM)
 		{
-			if (Robot.odometryMovingStatusFlag)
+			if ((Robot.odometryMovingStatusFlag) || (Robot.forwardKinCalcStatusFlag))
 			{
 				// Check x
 				scalarProduct = sensorsCoordinateCollAvoid[i][0]*robotTargetSpeedCs1[0];
@@ -295,6 +325,8 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor)
 	// Reset sensor
 	if (resetRangeFinder(numberOfSensor) != SUCCESS)
 	{
+		// Error of output Expander arised
+		rangeFinders.outputExpanderErrorFlag = EXPANDER_ERROR;
 		return ERROR;
 	}
 	// Initialization
@@ -324,9 +356,23 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor)
 }
 
 //--------------------------------------------- Middle level functions -----------------------------------------//
+
+// Reset expander
+void resetExpander()
+{
+	// Reset expander (Low logic level)
+	gpioPinSetLevel(EXPANDER_RESET_PORT, EXPANDER_RESET_PIN, GPIO_LEVEL_LOW);
+	delayInTenthOfMs(EXPANDER_RESET_DELAY_TENTH_OF_MS);
+	// Turn on expander (High logic level)
+	gpioPinSetLevel(EXPANDER_RESET_PORT, EXPANDER_RESET_PIN, GPIO_LEVEL_HIGH);
+	delayInTenthOfMs(EXPANDER_BOOT_DELAY_TENTH_OF_MS);
+	return;
+}
+
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr)
 {
+	resetExpander();
 	// Setup config register for right mapping of ports
 	if (expanderWriteReg(EXPANDER_CONFIG_REG_DEFAULT, 0xA2, expanderAddr) != SUCCESS)
 	{
@@ -358,6 +404,7 @@ ErrorStatus initExpanderOutputMode(uint8_t expanderAddr)
 // Initialize expander in input (interrupt) mode
 ErrorStatus initExpanderInterruptMode(uint8_t expanderAddr)
 {
+	resetExpander();
 	// Setup config register for right mapping of ports
 	if (expanderWriteReg(EXPANDER_CONFIG_REG_DEFAULT, 0xA2, expanderAddr) != SUCCESS)
 	{

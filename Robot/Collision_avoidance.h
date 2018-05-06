@@ -24,6 +24,9 @@
 // 1/sqrt(2)
 #define MAGIC_VALUE                                  0.70710678f
 //--------------------------------------------- Macros for expander --------------------------------------------//
+#define EXPANDER_RESET_DELAY_TENTH_OF_MS             0x02   //  equals 0.2 ms
+#define EXPANDER_BOOT_DELAY_TENTH_OF_MS              0x02   //  equals 0.2 ms
+
 #define EXPANDER_INTERRUPT_I2C_ADDRESS               0x20
 #define EXPANDER_RESET_I2C_ADDRESS                   0x21
 
@@ -73,8 +76,8 @@ typedef struct
 	uint8_t dataForCalibration[NUMBER_OF_RANGE_FINDERS_FOR_CALIBR];
 	Range_Finder_Errors_Typedef errorFlags[NUMBER_OF_RANGE_FINDERS];
 	Range_Finders_Reinit_flag_Typedef reinitFlags[NUMBER_OF_RANGE_FINDERS];
-	Expander_Errors_Typedef outputExpander;
-	Expander_Errors_Typedef interruptExpander;
+	Expander_Errors_Typedef outputExpanderErrorFlag;
+	Expander_Errors_Typedef interruptExpanderErrorFlag;
 	uint16_t outputVoltageOfExpander;
 	uint8_t globalReinitFlag;
 } Range_Finders_Struct_Typedef;
@@ -106,6 +109,8 @@ ErrorStatus resetRangeFinder(uint8_t numberOfSensor);
 ErrorStatus initRangeFinder(uint8_t numberOfSensor);
 
 //--------------------------------------------- Middle level functions -----------------------------------------//
+// Reset expander
+void resetExpander(void);
 
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr);

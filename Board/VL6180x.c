@@ -168,8 +168,8 @@ ErrorStatus rangeFinderInitContiniousInterruptNewSampleColAvoidMode(uint8_t addr
 		{
 			return ERROR;
 		}
-		// Max SNR 0.5 % 
-		if (rangeFinderWriteReg(SYSRANGE_MAX_AMBIENT_LEVEL_MULT, 0x08, addr) != SUCCESS)
+		// Max SNR 5 % 
+		if (rangeFinderWriteReg(SYSRANGE_MAX_AMBIENT_LEVEL_MULT, 0x50, addr) != SUCCESS)
 		{
 			return ERROR;
 		}

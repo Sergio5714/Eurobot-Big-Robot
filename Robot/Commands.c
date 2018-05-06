@@ -408,6 +408,18 @@ void checkCommandAndExecute()
 			sendAnswer(inputCommand.command, answer, 0x02);
 			break;
 		}
+		case FORM_CUBE:
+		{
+			// Check if manipulator's number  is received
+			if (inputCommand.numberOfreceivedParams != 0x01)
+				break;
+			uint8_t number = inputCommand.params[0];
+			setManipHighLevelCommand(FORM_CUBE_COMMAND, number, &cubeManipulators[number]);
+			// Send answer
+			uint8_t* answer = (uint8_t*)&"OK";
+			sendAnswer(inputCommand.command, answer, 0x02);
+			break;
+		}
 		case ODOMETRY_MOVEMENT:
 		{
 			// Check if 6 float numbers or 24 bytes are received
@@ -426,13 +438,17 @@ void checkCommandAndExecute()
 			// If distance is extremly small apply three times more acceleration for x and y
 			if (distance[0] <= ODOMETRY_MOVEMENT_SMALL_DIST_THRES)
 			{
-				acceleration[0] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEl_FACTOR * acceleration[0];
+				acceleration[0] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEL_FACTOR * acceleration[0];
 			}
 			if (distance[1] <= ODOMETRY_MOVEMENT_SMALL_DIST_THRES)
 			{
-				acceleration[1] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEl_FACTOR * acceleration[1];
+				acceleration[1] = ODOMETRY_MOVEMENT_SMALL_DIST_ACCEL_FACTOR * acceleration[1];
 			}
-			startMovementRobotCs1(&distance[0], &speed[0], &acceleration[0]);
+			// If odometry movement flag is empty
+			if (!Robot.odometryMovingStatusFlag)
+			{
+				startMovementRobotCs1(&distance[0], &speed[0], &acceleration[0]);
+			}
 			// Send answer
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);
@@ -485,9 +501,9 @@ void checkCommandAndExecute()
 			// Check if no parameters is received
 			if (inputCommand.numberOfreceivedParams != 0x00)
 				break;
-			gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_LOW);
-			delayInTenthOfMs(10);
 			gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_HIGH);
+			delayInTenthOfMs(200);
+			gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_LOW);
 			uint8_t* answer = (uint8_t*)&"OK";
 			sendAnswer(inputCommand.command, answer, 0x02);
 			break;

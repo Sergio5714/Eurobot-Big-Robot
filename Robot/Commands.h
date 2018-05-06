@@ -49,6 +49,7 @@ enum
 	RELEASE_MAGIC_CUBE            = 0xB4,
 	TAKE_LAST_CUBE                = 0xB5,
 	MAKE_FUNNY_ACTION             = 0xB6,
+	FORM_CUBE                     = 0xB7,
 	
 	ODOMETRY_MOVEMENT             = 0xA2,
 	

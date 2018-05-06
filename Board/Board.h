@@ -167,16 +167,16 @@
 #define EXTI_STARTUP_SOURCE_PORT         EXTI_GPIOD_SOURCE_PORT
 #define EXTI_STARTUP_PIN                 GPIO_Pin_1
 
-//#define EXTI_CLEAR_STARTUP_IRQN          EXTI0_IRQn
-//#define EXTI_CLEAR_STARTUP_PORT          GPIOA
-//#define EXTI_CLEAR_STARTUP_SOURCE_PORT   EXTI_GPIOA_SOURCE_PORT
-//#define EXTI_CLEAR_STARTUP_PIN           GPIO_Pin_0
-
 //--------------------------------------------- Enable pin for communication with servos ---------------------------------------//
 
 // Pin turns microchip for communication with servos (0 - transmitting data, 1 - receiving data)
 #define DYNAMIXEL_SIGNAL_EN_PIN          GPIO_Pin_12
 #define DYNAMIXEL_SIGNAL_EN_PORT         GPIOB
+
+//--------------------------------------------- Pin for expander reset ---------------------------------------------------------//
+
+#define EXPANDER_RESET_PIN          GPIO_Pin_0
+#define EXPANDER_RESET_PORT         GPIOD
 
 
 // Initialize all necessary peripheral devices

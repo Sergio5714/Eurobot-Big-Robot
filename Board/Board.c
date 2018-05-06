@@ -157,7 +157,7 @@ void boardInitAll()
 	
 	//--------------------------------------------- GPIO for servo reboot ----------------------------------------//
 	gpioInitPin(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
-	gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_HIGH);
+	gpioPinSetLevel(SERVO_REBOOT_PORT, SERVO_REBOOT_PIN, GPIO_LEVEL_LOW);
 	
 	//--------------------------------------------- Collision avoidance timer initialization ---------------------//
 	timSettings.TIM_Period = COLL_AVOID_TIM_ARR;
@@ -196,7 +196,12 @@ void boardInitAll()
 	//--------------------------------------------- Enable microchip for dynamixel signal pin --------------------//
 
 	gpioInitPin(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
-	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_HIGH);
+	gpioPinSetLevel(DYNAMIXEL_SIGNAL_EN_PORT, DYNAMIXEL_SIGNAL_EN_PIN, GPIO_LEVEL_LOW);
+	
+	//--------------------------------------------- Enable pin for expander reset --------------------------------//
+	
+	gpioInitPin(EXPANDER_RESET_PORT, EXPANDER_RESET_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_OD, GPIO_PUPD_UP);
+	gpioPinSetLevel(EXPANDER_RESET_PORT, EXPANDER_RESET_PIN, GPIO_LEVEL_HIGH);
 	
 	//--------------------------------------------- Enable modules -----------------------------------------------//
 	

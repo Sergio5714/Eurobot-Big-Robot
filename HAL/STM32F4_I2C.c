@@ -104,7 +104,7 @@ void I2CCheckBus(I2C_Module_With_State_Typedef* I2Cx)
 //--------------------------------------------- Inner functions ----------------------------------------------//
 
 // Generate stop conditions
-void I2CStop(I2C_TypeDef* I2Cx)
+static void I2CStop(I2C_TypeDef* I2Cx)
 {
 	I2Cx->CR1|=I2C_CR1_STOP;
 	return;
@@ -272,7 +272,7 @@ static I2C_Status_Typedef I2CWaitForBTF(I2C_Module_With_State_Typedef* I2Cx)
 }
 
 // Wait for stop flag to be cleared
-I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
+static I2C_Status_Typedef I2CWaitForStopToBeCleared(I2C_Module_With_State_Typedef* I2Cx)
 {
 	uint32_t startTime = getLocalTime();
 	

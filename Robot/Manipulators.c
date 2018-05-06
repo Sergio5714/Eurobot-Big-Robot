@@ -18,6 +18,9 @@ Manipulator_Subtasks_Typedef unloadTowerTaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, 
 // Task sequence for lifting to intermediate position
 Manipulator_Subtasks_Typedef liftToIntermPosTaskSeq[] = {SUBTASK_LIFT_MANIPULATOR_INTERM, SUBTASK_TERMINATOR};
 
+// Task sequence for lifting to upper intermediate position
+Manipulator_Subtasks_Typedef formCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR_UPPER_INTERM,
+                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR, SUBTASK_TERMINATOR};
 // Task sequence to open the door
 Manipulator_Subtasks_Typedef openDoorTaskSeq[] = {SUBTASK_OPEN_DOOR, SUBTASK_TERMINATOR};
 
@@ -59,6 +62,7 @@ void initManipulators(void)
 	cubeManipulators[0].slider.botPos = MANIP_LEFT_SERVO_SLIDER_BOT_POS;
 	cubeManipulators[0].slider.topPos = MANIP_LEFT_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[0].slider.intermPos = MANIP_LEFT_SERVO_SLIDER_INTERM_POS;
+	cubeManipulators[0].slider.uppperIntermPos = MANIP_LEFT_SERVO_SLIDER_UPPER_INTERM_POS;
 	cubeManipulators[0].door.id = MANIP_LEFT_SERVO_DOOR_ID;
 	cubeManipulators[0].door.closedAngle = MANIP_LEFT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[0].door.openedAngle  = MANIP_LEFT_SERVO_DOOR_OPENED_POS;
@@ -75,6 +79,7 @@ void initManipulators(void)
 	cubeManipulators[1].slider.botPos = MANIP_CENTRAL_SERVO_SLIDER_BOT_POS;
 	cubeManipulators[1].slider.topPos = MANIP_CENTRAL_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[1].slider.intermPos = MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS;
+	cubeManipulators[1].slider.uppperIntermPos = MANIP_CENTRAL_SERVO_SLIDER_UPPER_INTERM_POS;
 	cubeManipulators[1].door.id = MANIP_CENTRAL_SERVO_FUNNY_ID;
 	cubeManipulators[1].door.closedAngle = MANIP_CENTRAL_SERVO_FUNNY_CLOSED_POS;
 	cubeManipulators[1].door.openedAngle  = MANIP_CENTRAL_SERVO_FUNNY_BEE_POS;
@@ -88,6 +93,7 @@ void initManipulators(void)
 	cubeManipulators[2].slider.botPos = MANIP_RIGHT_SERVO_SLIDER_BOT_POS;
 	cubeManipulators[2].slider.topPos = MANIP_RIGHT_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[2].slider.intermPos = MANIP_RIGHT_SERVO_SLIDER_INTERM_POS;
+	cubeManipulators[2].slider.uppperIntermPos = MANIP_RIGHT_SERVO_SLIDER_UPPER_INTERM_POS;
 	cubeManipulators[2].door.id = MANIP_RIGHT_SERVO_DOOR_ID;
 	cubeManipulators[2].door.closedAngle = MANIP_RIGHT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[2].door.openedAngle  = MANIP_RIGHT_SERVO_DOOR_OPENED_POS;
@@ -277,35 +283,39 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 			servoTargetPos = manipulator->gripper.openedAngle;
 			break;
 		case SUBTASK_CLOSE_MANIPULATOR:
-			servoId  = manipulator->gripper.id;
+			servoId = manipulator->gripper.id;
 			servoTargetPos = manipulator->gripper.closedAngle;
 			break;
 		case SUBTASK_LOWER_MANIPULATOR:
-			servoId  = manipulator->slider.id;
+			servoId = manipulator->slider.id;
 			servoTargetPos = manipulator->slider.botPos;
 			break;
 		case SUBTASK_LIFT_MANIPULATOR:
-			servoId  = manipulator->slider.id;
+			servoId = manipulator->slider.id;
 			servoTargetPos = manipulator->slider.topPos;
 			break;
 		case SUBTASK_LIFT_MANIPULATOR_INTERM:
-			servoId  = manipulator->slider.id;
+			servoId = manipulator->slider.id;
 			servoTargetPos = manipulator->slider.intermPos;
 			break;
+		case SUBTASK_LIFT_MANIPULATOR_UPPER_INTERM:
+			servoId = manipulator->slider.id;
+			servoTargetPos = manipulator->slider.uppperIntermPos;
+			break;
 		case SUBTASK_OPEN_DOOR:
-			servoId  = manipulator->door.id;
+			servoId = manipulator->door.id;
 			servoTargetPos = manipulator->door.openedAngle;
 			break;
 		case SUBTASK_OPEN_DOOR_SLIGHTLY:
-			servoId  = manipulator->door.id;
+			servoId = manipulator->door.id;
 			servoTargetPos = manipulator->door.openedSlightlyAngle;	
 			break;		
 		case SUBTASK_CLOSE_DOOR:
-			servoId  = manipulator->door.id;
+			servoId = manipulator->door.id;
 			servoTargetPos = manipulator->door.closedAngle;
 			break;
 		case SUBTASK_PUSH_MAGIC_CUBE:
-			servoId  = manipulator->magicCube.id;
+			servoId = manipulator->magicCube.id;
 			servoTargetPos = manipulator->magicCube.finalPosition;
 			break;
 		case SUBTASK_RETURN_MAGIC_CUBE:
@@ -372,6 +382,9 @@ void setManipHighLevelCommand(Manipulator_Command_Typedef command, uint8_t numbe
 			break;
 		case LIFT_TO_INTERMEDIATE_POS_COMMAND:
 			manipulator->tasksSequencePtr = liftToIntermPosTaskSeq;
+			break;
+		case FORM_CUBE_COMMAND:
+			manipulator->tasksSequencePtr = formCubeTaskSeq;
 			break;
 		case OPEN_DOOR_COMMAND:
 			manipulator->tasksSequencePtr = openDoorTaskSeq;
