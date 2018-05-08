@@ -30,8 +30,11 @@ Manipulator_Subtasks_Typedef closeDoorTaskSeq[] = {SUBTASK_CLOSE_DOOR, SUBTASK_T
 // Task sequence to open the door a little bit
 Manipulator_Subtasks_Typedef openDoorSlightlyTaskSeq[] = {SUBTASK_OPEN_DOOR_SLIGHTLY, SUBTASK_TERMINATOR};
 
-// Task sequence torelease magic cube
+// Task sequence to release magic cube
 Manipulator_Subtasks_Typedef releaseMagicCubeTaskSeq[] = {SUBTASK_PUSH_MAGIC_CUBE, SUBTASK_RETURN_MAGIC_CUBE, SUBTASK_TERMINATOR};
+
+// Task sequence to init manipulator
+Manipulator_Subtasks_Typedef initManipulatorTaskSeq[] = {SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR, SUBTASK_CLOSE_DOOR, SUBTASK_TERMINATOR};
 
 Manipulator_Subtasks_Typedef taskTerminator = SUBTASK_TERMINATOR;
 													 
@@ -105,41 +108,30 @@ void initManipulators(void)
 	
 	uint8_t i;
 	
-	// Take cubes
+	// Turn all actuators into the start position
 	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
 	{
-		setManipHighLevelCommand(TAKE_CUBE_COMMAND, i, &cubeManipulators[i]);
+		setManipHighLevelCommand(INIT_MANIPULATOR_COMMAND, i, &cubeManipulators[i]);
 	}
 	
-	// delay
-	delayInTenthOfMs(MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS);
+	uint32_t startTime = getLocalTime();
 	
-	// Check status
-	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
+	while(!checkTimeout(startTime, MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS))
 	{
-		if (cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_SUCCESFUL_EXECUTION)
+		// Check status
+		for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
 		{
-			showError();
+			if ((cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_SUCCESFUL_EXECUTION)
+				&& (cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_ACTIVE_MODE))
+			{
+				// Show error
+				showError();
+				return;
+			}
 		}
 	}
-	
-	// Close doors and check funny action
-	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
-	{
-		setManipHighLevelCommand(CLOSE_DOOR_COMMAND, i, &cubeManipulators[i]);
-	}
-	
-	// delay
-	delayInTenthOfMs(MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS);
-	
-	// Check status
-	for (i = 0x00; i < NUMBER_OF_MANIPULATORS; i++)
-	{
-		if (cubeManipulators[i].subtasksExecutorStatusFlag != TASKS_EXECUTOR_SUCCESFUL_EXECUTION)
-		{
-			showError();
-		}
-	}
+	// No error
+	showNoError();
 	return;
 }
 
@@ -397,6 +389,9 @@ void setManipHighLevelCommand(Manipulator_Command_Typedef command, uint8_t numbe
 			break;
 		case RELEASE_MAGIC_CUBE_COMMAND:
 			manipulator->tasksSequencePtr = releaseMagicCubeTaskSeq;
+			break;
+		case INIT_MANIPULATOR_COMMAND:
+			manipulator->tasksSequencePtr = initManipulatorTaskSeq;
 			break;
 	}
 	// Set flag for task sequence execution

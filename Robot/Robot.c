@@ -51,7 +51,10 @@ void turnEverythingOff()
 		// Change PWM
 		timPwmChangeDutyCycle(motorPwmCh[i].timModule, motorPwmCh[i].channel, 0.0f);
 	}
-	return;
+	while (1)
+	{
+		
+	}
 }
 
 //--------------------------------------------- Functions for acquiring odometry and navigation-----------------//

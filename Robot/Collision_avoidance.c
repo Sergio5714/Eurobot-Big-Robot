@@ -151,6 +151,16 @@ void checkRangeFindersReinitFlags(void)
 {
 	uint8_t i;
 	uint8_t sum = 0x00;
+	
+	// Check if power is under reset or not
+	if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, EXPANDER_POWER_RESET_DELAY)
+		&& rangeFinders.powerResetStatusFlag)
+	{
+		powerTurnOnExpander();
+		rangeFinders.powerResetStatusFlag = 0x00;
+		return;
+	}
+	
 	// Check timeout after I2C reset
 	if (checkTimeout(I2CModule.timeOfLastI2CResetMillis, I2C_TIMEOUT_AFTER_RESET_TENTH_OF_MS))
 	{
@@ -166,19 +176,25 @@ void checkRangeFindersReinitFlags(void)
 			// Reset I2C bus
 			I2CReset(&I2CModule);
 			
-			// Reset Expander
-			resetExpander();
+			// Turn off power of expander and raise a flag
+			//powerTurnOffExpander();
+			//rangeFinders.powerResetStatusFlag = 0x01;
 			
 			// Clear Reinit flags
 			for(i = 0x00; i < NUMBER_OF_RANGE_FINDERS; i++)
 			{
 				rangeFinders.reinitFlags[i] = RANGE_FINDER_NO_NEED_TO_REINIT;
 			}
+			rangeFinders.outputExpanderErrorFlag = EXPANDER_NO_ERROR;
+			
 			// Indicate no error
 			showNoError();
 		}
 		else
-		{
+		{	
+			// Check if Expander was under reset or not
+			rangeFinders.outputExpanderErrorFlag = checkExpander();
+			
 			// Reinit expander if it is necessary
 			if (rangeFinders.outputExpanderErrorFlag == EXPANDER_ERROR)
 			{
@@ -369,12 +385,43 @@ void resetExpander()
 	return;
 }
 
+// I2C Power turn off
+void powerTurnOffExpander()
+{
+	gpioPinSetLevel(I2C_POWER_RESET_PORT, I2C_POWER_RESET_PIN, GPIO_LEVEL_HIGH);
+	return;
+}
+
+// I2C Power turn on
+void powerTurnOnExpander()
+{
+	gpioPinSetLevel(I2C_POWER_RESET_PORT, I2C_POWER_RESET_PIN, GPIO_LEVEL_LOW);
+	return;
+}
+
+// Check expander (if it was under reset or not)
+Expander_Errors_Typedef checkExpander(void)
+{
+	uint8_t expanderConfigRegValue;
+	// Read value
+	if (expanderReadReg(EXPANDER_CONFIG_REG, &expanderConfigRegValue, EXPANDER_RESET_I2C_ADDRESS) != SUCCESS)
+	{
+		return EXPANDER_CONNECTION_ERROR;
+	}
+	if (expanderConfigRegValue != EXPANDER_CONFIG_REG_CHECK_VALUE)
+	{
+		return EXPANDER_ERROR;
+	}
+	// Everything is OK
+	return EXPANDER_NO_ERROR;
+}
+
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr)
 {
 	resetExpander();
 	// Setup config register for right mapping of ports
-	if (expanderWriteReg(EXPANDER_CONFIG_REG_DEFAULT, 0xA2, expanderAddr) != SUCCESS)
+	if (expanderWriteReg(EXPANDER_CONFIG_REG_DEFAULT, EXPANDER_CONFIG_REG_CHECK_VALUE, expanderAddr) != SUCCESS)
 	{
 		return ERROR;
 	}

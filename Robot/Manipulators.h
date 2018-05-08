@@ -5,7 +5,7 @@
 #include "stm32f4xx.h"
 
 #define NUMBER_OF_MANIPULATORS               0x03
-#define MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS 0x7530  // equals 3000  ms
+#define MANIPULATOR_INIT_TIMEOUT_TENTH_OF_MS 0xEA60  // equals 6000  ms
 
 //--------------------------------------------- Typedefs and enums for tasks executor ---------------------------//
 
@@ -128,6 +128,7 @@ typedef enum
 	CLOSE_DOOR_COMMAND,
 	RELEASE_MAGIC_CUBE_COMMAND,
 	FORM_CUBE_COMMAND,
+	INIT_MANIPULATOR_COMMAND,
 } Manipulator_Command_Typedef;
 
 //--------------------------------------------- Macros for servos ------------------------------------------------//
@@ -152,8 +153,8 @@ typedef enum
 #define MANIP_RIGHT_SERVO_SLIDER_BOT_POS            0x12C // 300°
 #define MANIP_RIGHT_SERVO_SLIDER_INTERM_POS         0xF5  // 245° TBD
 #define MANIP_RIGHT_SERVO_SLIDER_UPPER_INTERM_POS   0x41  // 65°
-#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS        0xAA  // 170°
-#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS        0xDC  // 220°
+#define MANIP_RIGHT_SERVO_GRIPPER_OPENED_POS        0x46  // 70°
+#define MANIP_RIGHT_SERVO_GRIPPER_CLOSED_POS        0x7F  // 127°
 #define MANIP_RIGHT_SERVO_MAGIC_CUBE_INITIAL_POS    0xF5  // 245°
 #define MANIP_RIGHT_SERVO_MAGIC_CUBE_FINAL_POS      0x12C // 300°
 #define MANIP_RIGHT_SERVO_DOOR_OPENED_POS           0xE6  // 230°
@@ -164,8 +165,8 @@ typedef enum
 #define MANIP_LEFT_SERVO_SLIDER_BOT_POS             0x14  // 20°
 #define MANIP_LEFT_SERVO_SLIDER_INTERM_POS          0x3C  // 60° TBD
 #define MANIP_LEFT_SERVO_SLIDER_UPPER_INTERM_POS    0xFA  // 250°
-#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS         0x69  // 105°
-#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS         0x46  // 70°
+#define MANIP_LEFT_SERVO_GRIPPER_OPENED_POS         0xAA  // 170°
+#define MANIP_LEFT_SERVO_GRIPPER_CLOSED_POS         0x69  // 105°
 #define MANIP_LEFT_SERVO_MAGIC_CUBE_INITIAL_POS     0x46  // 70°
 #define MANIP_LEFT_SERVO_MAGIC_CUBE_FINAL_POS       0x00  // 0°
 #define MANIP_LEFT_SERVO_DOOR_OPENED_POS            0x46  // 70°
@@ -176,8 +177,8 @@ typedef enum
 #define MANIP_CENTRAL_SERVO_SLIDER_BOT_POS          0x129 // 297° 
 #define MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS       0xFA  // 250° TBD
 #define MANIP_CENTRAL_SERVO_SLIDER_UPPER_INTERM_POS 0x32  // 50°
-#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS      0xD2  // 210°
-#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS      0xEB  // 235°
+#define MANIP_CENTRAL_SERVO_GRIPPER_OPENED_POS      0x46  // 70°
+#define MANIP_CENTRAL_SERVO_GRIPPER_CLOSED_POS      0x91  // 145°
 #define MANIP_CENTRAL_SERVO_FUNNY_BUTTON_POS        0x38  // 56° 
 #define MANIP_CENTRAL_SERVO_FUNNY_BEE_POS           0x8F  // 143° 
 #define MANIP_CENTRAL_SERVO_FUNNY_CLOSED_POS        0xE7  // 231°

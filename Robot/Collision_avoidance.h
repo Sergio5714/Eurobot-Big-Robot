@@ -7,8 +7,8 @@
 #include "Robot.h"
 
 //--------------------------------------------- Macros for proximity sensor ------------------------------------//
-#define RANGE_FINDER_RESET_DELAY_TENTH_OF_MS         0x02   //  equals 0.2 ms
-#define RANGE_FINDER_MCU_BOOT_DELAY_TENTH_OF_MS      0x0A   //  equals 1 ms
+#define RANGE_FINDER_RESET_DELAY_TENTH_OF_MS         0x03   //  equals 0.3 ms
+#define RANGE_FINDER_MCU_BOOT_DELAY_TENTH_OF_MS      0x10   //  equals 1.6 ms
 #define RANGE_FINDERS_FIRST_READ_DELAY_TENTH_OF_MS   0x4E20 // equals  2000 ms
 
 #define RANGE_FINDER_INITIAL_ADDR_TO_SETUP           RANGEFINDER_DEFAULT_ADDR + 0x01
@@ -26,6 +26,7 @@
 //--------------------------------------------- Macros for expander --------------------------------------------//
 #define EXPANDER_RESET_DELAY_TENTH_OF_MS             0x02   //  equals 0.2 ms
 #define EXPANDER_BOOT_DELAY_TENTH_OF_MS              0x02   //  equals 0.2 ms
+#define EXPANDER_POWER_RESET_DELAY                   0x6A4  //  equals 170 ms
 
 #define EXPANDER_INTERRUPT_I2C_ADDRESS               0x20
 #define EXPANDER_RESET_I2C_ADDRESS                   0x21
@@ -42,6 +43,9 @@
 #define EXPANDER_REG_INTERRUPT_CONTROL_B             0x14
 #define EXPANDER_CONFIG_REG_DEFAULT                  0x0A
 #define EXPANDER_CONFIG_REG                          0x05
+
+#define EXPANDER_CONFIG_REG_CHECK_VALUE              0xA2
+
 //INTERRUPT CAPTURED VALUE FOR PORT REGISTER
 #define EXPANDER_REG_INT_CAP_VAL_A                   0x08
 #define EXPANDER_REG_INT_CAP_VAL_B                   0x18 
@@ -61,6 +65,7 @@ typedef enum
 {
 	EXPANDER_NO_ERROR,
 	EXPANDER_ERROR,
+	EXPANDER_CONNECTION_ERROR,
 } Expander_Errors_Typedef;
 
 typedef enum
@@ -79,7 +84,7 @@ typedef struct
 	Expander_Errors_Typedef outputExpanderErrorFlag;
 	Expander_Errors_Typedef interruptExpanderErrorFlag;
 	uint16_t outputVoltageOfExpander;
-	uint8_t globalReinitFlag;
+	uint8_t powerResetStatusFlag;
 } Range_Finders_Struct_Typedef;
 
 //--------------------------------------------- High level functions -------------------------------------------//
@@ -111,6 +116,15 @@ ErrorStatus initRangeFinder(uint8_t numberOfSensor);
 //--------------------------------------------- Middle level functions -----------------------------------------//
 // Reset expander
 void resetExpander(void);
+
+// Expander Power reset off
+void powerTurnOffExpander(void);
+
+// Expander Power reset on
+void powerTurnOnExpander(void);
+
+// Check expander (if it was under reset or not)
+Expander_Errors_Typedef checkExpander(void);
 
 // Initialize expander in output mode
 ErrorStatus initExpanderOutputMode(uint8_t expanderAddr);

@@ -16,7 +16,7 @@
 
 // Common robot parameters
 #define ROBOT_NUMBER_OF_MOTORS                    0x04
-#define ROBOT_TIME_OF_MATCH_TENTH_OF_MS           0xF4240 // 100 sec
+#define ROBOT_TIME_OF_MATCH_TENTH_OF_MS           0xF1B30 // 99 sec
 
 //--------------------------------------------- Definitions for motors -----------------------------------------//
 
