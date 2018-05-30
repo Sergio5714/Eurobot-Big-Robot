@@ -67,31 +67,8 @@ void I2CDisable(I2C_TypeDef* I2Cx)
 // Reset I2C bus
 void I2CReset(I2C_Module_With_State_Typedef* I2Cx)
 {	
-	// Generate stop condition
-	//I2CStop(I2CModule.module);
-	//I2CWaitForStopToBeCleared(&I2CModule);
-	
 	// 1.0 Disable I2C
 	I2CDisable(I2Cx->module);
-	
-//	// 1.2 Reset module
-//	I2Cx->module->CR1|=I2C_CR1_SWRST;
-//	I2Cx->module->CR1^=I2C_CR1_SWRST;
-	
-	// 1.5 Disable clock
-	//Turn off clocking I2C
-//	if (I2Cx->module == I2C1)
-//	{
-//		RCC->APB1ENR &= ~RCC_APB1ENR_I2C1EN;
-//	}
-//	else if (I2Cx->module == I2C2)
-//	{
-//		RCC->APB1ENR &= ~RCC_APB1ENR_I2C2EN;
-//	}
-//	else if (I2Cx->module == I2C3)
-//	{
-//		RCC->APB1ENR &= ~RCC_APB1ENR_I2C3EN;
-//	}
 	
 	// 2.0 Configure the SCL and SDA as general purpose Output open drain (HIGH level)
 	

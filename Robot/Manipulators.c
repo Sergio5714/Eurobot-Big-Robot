@@ -5,13 +5,15 @@ Cube_Manipulator_Typedef cubeManipulators[NUMBER_OF_MANIPULATORS];
 Servo_Checker_Typedef servoChecker[NUMBER_OF_MANIPULATORS];
 
 // Task sequence for taking a cube
-Manipulator_Subtasks_Typedef takeCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR,
-                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR,
-                                                  SUBTASK_TERMINATOR};
+Manipulator_Subtasks_Typedef takeCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR_LOWER_INTERM,
+                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR,
+                                                  SUBTASK_LOWER_MANIPULATOR, SUBTASK_CLOSE_MANIPULATOR,
+                                                  SUBTASK_LIFT_MANIPULATOR, SUBTASK_TERMINATOR};
 // Task sequence for taking last cube
-Manipulator_Subtasks_Typedef takeLastCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR,
-                                                      SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR_INTERM,
-                                                      SUBTASK_TERMINATOR};
+Manipulator_Subtasks_Typedef takeLastCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR_LOWER_INTERM,
+	                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR,
+	                                                  SUBTASK_LOWER_MANIPULATOR, SUBTASK_CLOSE_MANIPULATOR,
+                                                      SUBTASK_LIFT_MANIPULATOR_INTERM, SUBTASK_TERMINATOR};
 // Task sequence for unloading tower
 Manipulator_Subtasks_Typedef unloadTowerTaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR,
                                                      SUBTASK_TERMINATOR};
@@ -19,8 +21,11 @@ Manipulator_Subtasks_Typedef unloadTowerTaskSeq[] = {SUBTASK_LOWER_MANIPULATOR, 
 Manipulator_Subtasks_Typedef liftToIntermPosTaskSeq[] = {SUBTASK_LIFT_MANIPULATOR_INTERM, SUBTASK_TERMINATOR};
 
 // Task sequence for lifting to upper intermediate position
-Manipulator_Subtasks_Typedef formCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR_UPPER_INTERM,
-                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR, SUBTASK_TERMINATOR};
+Manipulator_Subtasks_Typedef formCubeTaskSeq[] = {SUBTASK_OPEN_MANIPULATOR, SUBTASK_LOWER_MANIPULATOR_LOWER_INTERM,
+                                                  SUBTASK_CLOSE_MANIPULATOR, SUBTASK_OPEN_MANIPULATOR,
+                                                  SUBTASK_LOWER_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR_UPPER_INTERM,
+	                                              SUBTASK_CLOSE_MANIPULATOR, SUBTASK_LIFT_MANIPULATOR,
+                                                  SUBTASK_TERMINATOR};
 // Task sequence to open the door
 Manipulator_Subtasks_Typedef openDoorTaskSeq[] = {SUBTASK_OPEN_DOOR, SUBTASK_TERMINATOR};
 
@@ -66,6 +71,7 @@ void initManipulators(void)
 	cubeManipulators[0].slider.topPos = MANIP_LEFT_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[0].slider.intermPos = MANIP_LEFT_SERVO_SLIDER_INTERM_POS;
 	cubeManipulators[0].slider.uppperIntermPos = MANIP_LEFT_SERVO_SLIDER_UPPER_INTERM_POS;
+	cubeManipulators[0].slider.lowerIntermPos = MANIP_LEFT_SERVO_SLIDER_LOWER_INTERM_POS;
 	cubeManipulators[0].door.id = MANIP_LEFT_SERVO_DOOR_ID;
 	cubeManipulators[0].door.closedAngle = MANIP_LEFT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[0].door.openedAngle  = MANIP_LEFT_SERVO_DOOR_OPENED_POS;
@@ -83,6 +89,7 @@ void initManipulators(void)
 	cubeManipulators[1].slider.topPos = MANIP_CENTRAL_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[1].slider.intermPos = MANIP_CENTRAL_SERVO_SLIDER_INTERM_POS;
 	cubeManipulators[1].slider.uppperIntermPos = MANIP_CENTRAL_SERVO_SLIDER_UPPER_INTERM_POS;
+	cubeManipulators[1].slider.lowerIntermPos = MANIP_CENTRAL_SERVO_SLIDER_LOWER_INTERM_POS;
 	cubeManipulators[1].door.id = MANIP_CENTRAL_SERVO_FUNNY_ID;
 	cubeManipulators[1].door.closedAngle = MANIP_CENTRAL_SERVO_FUNNY_CLOSED_POS;
 	cubeManipulators[1].door.openedAngle  = MANIP_CENTRAL_SERVO_FUNNY_BEE_POS;
@@ -97,6 +104,7 @@ void initManipulators(void)
 	cubeManipulators[2].slider.topPos = MANIP_RIGHT_SERVO_SLIDER_TOP_POS;
 	cubeManipulators[2].slider.intermPos = MANIP_RIGHT_SERVO_SLIDER_INTERM_POS;
 	cubeManipulators[2].slider.uppperIntermPos = MANIP_RIGHT_SERVO_SLIDER_UPPER_INTERM_POS;
+	cubeManipulators[2].slider.lowerIntermPos = MANIP_RIGHT_SERVO_SLIDER_LOWER_INTERM_POS;
 	cubeManipulators[2].door.id = MANIP_RIGHT_SERVO_DOOR_ID;
 	cubeManipulators[2].door.closedAngle = MANIP_RIGHT_SERVO_DOOR_CLOSED_POS;
 	cubeManipulators[2].door.openedAngle  = MANIP_RIGHT_SERVO_DOOR_OPENED_POS;
@@ -281,6 +289,10 @@ void execManipSubtasks(uint8_t number, Cube_Manipulator_Typedef* manipulator)
 		case SUBTASK_LOWER_MANIPULATOR:
 			servoId = manipulator->slider.id;
 			servoTargetPos = manipulator->slider.botPos;
+			break;
+		case SUBTASK_LOWER_MANIPULATOR_LOWER_INTERM:
+			servoId = manipulator->slider.id;
+			servoTargetPos = manipulator->slider.lowerIntermPos;
 			break;
 		case SUBTASK_LIFT_MANIPULATOR:
 			servoId = manipulator->slider.id;

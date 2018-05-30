@@ -174,7 +174,7 @@ void boardInitAll()
 	gpioInitPin(COLL_AVOID_LED_PORT, COLL_AVOID_LED_PIN, GPIO_MODE_OUT, GPIO_OUTPUT_MODE_PP, GPIO_PUPD_NOPULL);
 	
 	// Indicate error
-	showError();
+	showNoError();
 	
 	//--------------------------------------------- Local time timer initialization ------------------------------//
 	timSettings.TIM_Period = LOCAL_TIME_TIM_ARR;
