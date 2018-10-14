@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.6.11)  5 OCT 2018 11:57
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.6.11)  14 OCT 2018 22:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -64,6 +64,9 @@ File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
 ))
 (c:/texlive/2018/texmf-dist/tex/latex/listings/lstlang1.sty
 File: lstlang1.sty 2015/06/04 1.6 listings language file
+)
+(c:/texlive/2018/texmf-dist/tex/latex/listings/lstmisc.sty
+File: lstmisc.sty 2015/06/04 1.6 (Carsten Heinz)
 )
 (c:/texlive/2018/texmf-dist/tex/latex/cmap/cmap.sty
 Package: cmap 2008/03/06 v1.0h CMap support: searchable PDF
@@ -711,39 +714,47 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 81.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 81.
-<images/scheme.pdf, id=14, 333.245pt x 376.40625pt>
+<images/scheme.pdf, id=14, 333.245pt x 375.4025pt>
 File: images/scheme.pdf Graphic file (type pdf)
 <use images/scheme.pdf>
 Package pdftex.def Info: images/scheme.pdf  used on input line 102.
-(pdftex.def)             Requested size: 333.24417pt x 376.40532pt.
+(pdftex.def)             Requested size: 333.24417pt x 375.40158pt.
  [2] [3 <./images/scheme.pdf
 
 pdfTeX warning: pdflatex.exe (file ./images/scheme.pdf): PDF inclusion: invalid
  other resource which is no dict (key 'ProcSets', type <array>); ignored.
->] [4] (./Eurobot_2019_manual.aux) ) 
+>]
+LaTeX Font Info:    Try loading font information for T2A+cmtt on input line 116
+.
+ (c:/texlive/2018/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
+File: t2acmtt.fd 2001/08/11 v1.0a Computer Modern Cyrillic font definitions
+) [4] [5]
+(./Eurobot_2019_manual.aux) ) 
 Here is how much of TeX's memory you used:
- 7092 strings out of 492646
- 98145 string characters out of 6133325
- 176149 words of memory out of 5000000
- 10730 multiletter control sequences out of 15000+600000
- 22521 words of font info for 62 fonts, out of 8000000 for 9000
+ 7508 strings out of 492646
+ 102638 string characters out of 6133325
+ 191433 words of memory out of 5000000
+ 11132 multiletter control sequences out of 15000+600000
+ 25284 words of font info for 66 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,7n,40p,1113b,271s stack positions out of 5000i,500n,10000p,200000b,80000s
-{c:/texlive/2018/texmf-dist/fonts/enc/dvips
-/cm-super/cm-super-t2a.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfo
-nts/cm/cmmi12.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-mi8.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c
-:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive
-/2018/texmf-dist/fonts/type1/public/cm-super/sfbi1200.pfb><c:/texlive/2018/texm
-f-dist/fonts/type1/public/cm-super/sfbx1440.pfb><c:/texlive/2018/texmf-dist/fon
-ts/type1/public/cm-super/sfbx1728.pfb><c:/texlive/2018/texmf-dist/fonts/type1/p
-ublic/cm-super/sfrm1200.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-s
-uper/sfrm1440.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfrm2
-074.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb>
-Output written on Eurobot_2019_manual.pdf (4 pages, 226495 bytes).
+ 41i,7n,49p,1114b,1124s stack positions out of 5000i,500n,10000p,200000b,80000s
+{c:/texlive/2018/texmf-dist/fonts/enc/dvips/cm-sup
+er/cm-super-t2a.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/
+cmmi12.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb
+><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texli
+ve/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2018/t
+exmf-dist/fonts/type1/public/cm-super/sfbi1200.pfb><c:/texlive/2018/texmf-dist/
+fonts/type1/public/cm-super/sfbx1200.pfb><c:/texlive/2018/texmf-dist/fonts/type
+1/public/cm-super/sfbx1440.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/c
+m-super/sfbx1728.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sf
+rm1200.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb
+><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfrm2074.pfb><c:/texli
+ve/2018/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb><c:/texlive/2018/te
+xmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on Eurobot_2019_manual.pdf (5 pages, 285824 bytes).
 PDF statistics:
- 87 PDF objects out of 1000 (max. 8388607)
- 57 compressed objects within 1 object stream
+ 98 PDF objects out of 1000 (max. 8388607)
+ 65 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
