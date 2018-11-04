@@ -33,6 +33,10 @@
 %\usepackage[english,russian]{babel}	% локализация и переносы
 \usepackage[english]{babel}
 
+% Для таблиц
+\usepackage{longtable}
+\usepackage{pdflscape}
+
 \usepackage{pdfpages}
 
 %%% Дополнительная работа с математикой
@@ -49,6 +53,8 @@
 
 %% Свои команды
 %\DeclareMathOperator{\sgn}{\mathop{sgn}}
+\newcommand{\textitbf}[1]{\textbf{\textit{#1}}}
+\newcommand{\inlinecode}[1]{\lstinline{#1}}
 
 %% Перенос знаков в формулах (по Львовскому)
 %\newcommand*{\hm}[1]{#1\nobreak\discretionary{}
@@ -165,7 +171,60 @@ The source code files for  \textit{MCP23017} driver and other subroutines:
 Periodical data acquisition of ranges is implemented in the interrupt handler of a timer called \textbf{\textit{COLL\_AVOID\_TIM\_MODULE}}. The code of the handler is located in \textbf{\textit{Interrupts.c}}.
 
 \subsection{Subsystem for movement control}
+The subsystem for movement control is responsible for encoder's data acquisition, calculation of kinematics (inverse and forward), smooth small movements with acceleration. All necessary functions are implemented in source code files:
+\begin{itemize}
+	\item \textitbf{Robot.h}
+	\item \textitbf{Robot.c}
+\end{itemize}
 
+The functions are separated into several groups. The short description of each function can be found in table \ref{tab:functions_for_movement}.
+
+\begin{longtable}[H]{|m{6 cm}|m{7 cm}|}
+\caption{ Functions of the subsystem for movement control}\label{tab:functions_for_movement}\\
+\hline
+\multicolumn{1}{|c|}{Function} & \multicolumn{1}{|c|}{Short description} \\
+\hline
+
+\multicolumn{2}{|c|}{\textitbf{Odometry data acquisition}} \\
+\hline
+\inlinecode{readEnc (void)} & Reads data from encoders, calculate coordinates and speeds of each wheel, calculates instanteneous coordinates and speeds in robot's coordinate system. \\
+\hline
+\inlinecode{calcGlobSpeedAndCoord (void)}& Calculates robot's speed components and coordinates in global coordinate system by using speeds in robot's coordinate system.\\
+\hline
+
+\multicolumn{2}{|c|}{\textitbf{Motor control}} \\
+\hline
+\inlinecode{setMotorSpeed (uint8_t motorNumber, float speed)} & Sets speed of particular wheel. It is comfortable to use for diagnostics. \\
+\hline
+\inlinecode{setMotorSpeeds (void)} &Sets received target speeds for all motors. \\
+\hline
+
+\multicolumn{2}{|c|}{\textitbf{Calculation of kinematics}}\\
+\hline
+\inlinecode{calcForwardKin (void)}  & Calculates forward kinematics (from speeds in robot's coordinate system to motors' speed).\\
+\hline
+\inlinecode{checkSaturation (float* targetSpeed)} & Check saturation of motors and change speeds if it is needed (speeds in robot's coordinate system).\\
+\hline
+\inlinecode{calcInverseKin (void)} & Calculates inverse kinematics (from wheels' speeds to speeds in robot's coordinate system).\\
+\hline
+
+\multicolumn{2}{|c|}{\textitbf{Movement with acceleration}}\\
+\hline
+\inlinecode{startMovementRobotCs1 (float* distance, float* speedAbs, float accelerationAbs[3])} & Starts short distance movement with acceleration in robot's coordinate system. Input accelerations are corrected inside the function in order to be syncronized.\\
+\hline
+\inlinecode{calculateTrajectParameters (uint8_t coordinateNumber, float* accelerationAbs)} & Inner function for calculation of points of accelleration and decceleration.\\
+\hline
+\inlinecode{syncAccelerations (float* distance, float* speedAbs, float* accelerationAbs)} & Inner function for syncronizing accelerations.\\
+\hline
+\inlinecode{speedRecalculation (void)} & Speed recalculation based on current speed and coordinate in robot's coordinate system.\\
+\hline
+\inlinecode{checkIfPositionIsReached (void)} & Function checks if we reached desired position or not and changes mode of movement when the robot reaches transition points.\\
+\hline
+\inlinecode{checkIfPositionIsReachedCoord (uint8_t i, float* robotCoordBuf)} & Subfunction for previous function.\\
+\hline
+\end{longtable} 
+
+Apart from the functions mentioned in the table \ref{tab:functions_for_movement} there are some supplementary funtions for matrix calculations (see \textitbf{Matrix.c}, \textitbf{Matrix.h}, angle normalization (see \inlinecode{static void normalizeAngle(float* angle)} of \textitbf{Robot.h})) and other trivial procedures.
 
 \subsection{Subsystem for task execution of servo manipulators}
 
