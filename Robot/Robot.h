@@ -115,7 +115,8 @@ void turnEverythingOff(void);
 // Calculate robot speed and coordinates in global coordinate system by using speeds in robot's coordinate system
 void calcGlobSpeedAndCoord(void);
 
-// Read data from encoders, calculate coordinates and speeds of wheels
+// Read data from encoders, calculate coordinates and speeds of wheels, 
+// + calculates instanteneous coordinates in robot coordinate system
 void readEnc(void);
 
 //--------------------------------------------- Functions for calculation of kinematics ------------------------//
@@ -124,7 +125,7 @@ void readEnc(void);
 void calcForwardKin(void);
 
 // Check saturation of motors and change speeds if it is needed (speeds in robot's coordinate system)
-void checkSaturation( float* targetSpeed);
+void checkSaturation(float* targetSpeed);
 
 // Calculate inverse kinematics (from wheels' speeds to speeds in robot's coordinate system)
 void calcInverseKin(void);
@@ -160,7 +161,7 @@ void speedRecalculation(void);
 void checkIfPositionIsReached(void);
 
 // Subfunction for checkIfPositionIsReached() function
-void checkIfPositionIsReachedCoord(uint8_t numberOfManipulator, float* robotCoordBuf);
+void checkIfPositionIsReachedCoord(uint8_t i, float* robotCoordBuf);
 
 //--------------------------------------------- Other functions ------------------------------------------------//
 

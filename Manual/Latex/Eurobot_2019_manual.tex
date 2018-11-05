@@ -89,7 +89,7 @@ Eurobot is an international robotics competition for students. The team REset of
 \section{Breakdown structure of the firmware}
 The breakdown structure of the firmware for STM32f4 microcontroller is represented in the figure \ref{ris:scheme}. 
 
-The pattern of a superloop with interrupts is used to implement all necessary functionality. After power on all the peripheral modules are initialized at beginning of \textbf{\textit{int main()}}. Then inside a "while" loop (\textbf{\textit{main.c}}) we can observe only functions that are responsible for two tasks:
+The pattern of a superloop with interrupts is used to implement all necessary functionality. After power on all the peripheral modules are initialized at beginning of \inlinecode{int main()}. Then inside a "\inlinecode{while}" loop (\textitbf{main.c}) we can observe only functions that are responsible for two tasks:
 \begin{itemize}
 	\item Communication with high level.
 	\item Global shutdown.
@@ -115,7 +115,7 @@ There are basically three service routines that are depicted in the scheme \ref{
 
 \paragraph{Global initialization.}
 
-Global initialisation routine is a piece of code that performs the whole initialization of peripheral modules and sensors after a power on. To make mapping for peripheral modules more intuitive a bunch of macros are defined in \textbf{\textit{Board.h}}. Then macros are used everywhere in the firmware and especially in a function \textbf{\textit{void boardInitAll()}} that is responsible for global initialization and is implemented in \textbf{\textit{Board.c}}
+Global initialisation routine is a piece of code that performs the whole initialization of peripheral modules and sensors after a power on. To make mapping for peripheral modules more intuitive a bunch of macros are defined in \textitbf{Board.h}. Then macros are used everywhere in the firmware and especially in a function \inlinecode{void boardInitAll()} that is responsible for global initialization and is implemented in \textitbf{Board.c}
 
 \paragraph{Global timer.}
 Global timer is a main timer in the firmware that is used in all time-based functions. The quantization step of a timer is \textbf{$\textbf{1/10}$ of a millisecond}. Main three functions to work with global time are the following:
@@ -125,10 +125,10 @@ uint32_t getTimeDifference(uint32_t startTime);
 uint8_t checkTimeout(uint32_t startTime, uint32_t timeout);
 void delayInTenthOfMs(uint16_t delay);
 \end{lstlisting}
-The first function returns global time in tenth of a millisecond (dimension of the output is $\textbf{ms/10}$). The second function return time difference between current time and \textbf{\textit{startTime}}. The third function returns \textbf{\textit{1}} if \textbf{\textit{timeout}} was exceeded and \textbf{\textit{0}} otherwise. The last function makes "stupid" delay for a desired time interval.
+The first function returns global time in tenth of a millisecond (dimension of the output is $\textbf{ms/10}$). The second function return time difference between current time and \inlinecode{startTime}. The third function returns \textitbf{1} if \textitbf{timeout} was exceeded and \textitbf{0} otherwise. The last function makes "stupid" delay for a desired time interval.
  
 \paragraph{Global shutdown.}
-This service routine is very important because it provides a predictable behaviour of the robot after the end of a match regardless of the high level code. The code of the function \textbf{\textit{turnEverythingOff()}} that is implemented in \textbf{\textit{Robot.c}} is provided below:
+This service routine is very important because it provides a predictable behaviour of the robot after the end of a match regardless of the high level code. The code of the function \inlinecode{void turnEverythingOff()} that is implemented in \textitbf{Robot.c} is provided below:
 \begin{lstlisting}
 void turnEverythingOff()
 {
@@ -152,23 +152,23 @@ void turnEverythingOff()
 } 
 
 \end{lstlisting}
-As it can be noticed from the comments the function  turn off the interrupts globally,stops all the actuators and enters infinite cycle. The firmware call the function after successful comparison between time of robot's start and macro \textbf{\textit{ROBOT\_TIME\_OF\_MATCH\_TENTH\_OF\_MS}} inside \textbf{\textit{main.c}}.
+As it can be noticed from the comments the function  turn off the interrupts globally,stops all the actuators and enters infinite cycle. The firmware call the function after successful comparison between time of robot's start and macro \inlinecode{ROBOT\_TIME\_OF\_MATCH\_TENTH\_OF\_MS} inside \textitbf{main.c}.
 \subsection{Subsystem for collision avoidance}
-The collision avoidance system of the robot is based on a set of proximity sensors \textit{VL6180X} from \textit{ST} company. It is a time of flight (TOF) sensor that has an approximate precision (noise) of $2\:mm$ and typical accuracy (range offset for surfaces with different reflectance) of about $13\:mm$. The sensor has digital I2C interface with a fixed I2C adress that can be changed after power on. As we are using a set of sensors with the same initial adress the subsystem also contains GPIO I2C expander \textit{MCP23017}. The expander allows to perform subsequent initialization of sensor's array and local reinitialization of particular sensor in case of an error. The maximum frequency of sensor's data acquisition for one sensor depends on the reflectance of the target, but it could be configured with constrained convergence time (see the datasheet for \textit{VL6180X}). In the firmware a custom method of sensor's initialization is used that allows to achieve $50 Hz$ data acquisition frequency and reduce the sensitivity cone for the proximity sensors. 
+The collision avoidance system of the robot is based on a set of proximity sensors \textitbf{VL6180X} from \textitbf{ST} company. It is a time of flight (TOF) sensor that has an approximate precision (noise) of $2\:mm$ and typical accuracy (range offset for surfaces with different reflectance) of about $13\:mm$. The sensor has digital I2C interface with a fixed I2C adress that can be changed after power on. As we are using a set of sensors with the same initial adress the subsystem also contains GPIO I2C expander \textitbf{MCP23017}. The expander allows to perform subsequent initialization of sensor's array and local reinitialization of particular sensor in case of an error. The maximum frequency of sensor's data acquisition for one sensor depends on the reflectance of the target, but it could be configured with constrained convergence time (see the datasheet for \textitbf{VL6180X}). In the firmware a custom method of sensor's initialization is used that allows to achieve $50 Hz$ data acquisition frequency and reduce the sensitivity cone for the proximity sensors. 
 
-The source code files for  \textit{VL6180X} driver:
+The source code files for  \textitbf{VL6180X} driver:
 \begin{itemize}
-	\item \textbf{\textit{VL6180x.h}}
-	\item \textbf{\textit{VL6180x.c}}
+	\item \textitbf{VL6180x.h}
+	\item \textitbf{VL6180x.c}
 \end{itemize}
 
-The source code files for  \textit{MCP23017} driver and other subroutines:
+The source code files for  \textitbf{MCP23017} driver and other subroutines:
 \begin{itemize}
-	\item \textbf{\textit{Collision\_avoidance.h}}
-	\item \textbf{\textit{Collision\_avoidance.c}}
+	\item \textitbf{Collision\_avoidance.h}
+	\item \textitbf{Collision\_avoidance.c}
 \end{itemize}
 
-Periodical data acquisition of ranges is implemented in the interrupt handler of a timer called \textbf{\textit{COLL\_AVOID\_TIM\_MODULE}}. The code of the handler is located in \textbf{\textit{Interrupts.c}}.
+Periodical data acquisition of ranges is implemented in the interrupt handler of a timer called \inlinecode{COLL\_AVOID\_TIM\_MODULE}. The code of the handler is located in \textitbf{Interrupts.c}.
 
 \subsection{Subsystem for movement control}
 The subsystem for movement control is responsible for encoder's data acquisition, calculation of kinematics (inverse and forward), smooth small movements with acceleration. All necessary functions are implemented in source code files:
@@ -177,7 +177,7 @@ The subsystem for movement control is responsible for encoder's data acquisition
 	\item \textitbf{Robot.c}
 \end{itemize}
 
-The functions are separated into several groups. The short description of each function can be found in table \ref{tab:functions_for_movement}.
+The functions are separated into several groups. A short description of each function can be found in table \ref{tab:functions_for_movement}.
 
 \begin{longtable}[H]{|m{6 cm}|m{7 cm}|}
 \caption{ Functions of the subsystem for movement control}\label{tab:functions_for_movement}\\
@@ -222,9 +222,25 @@ The functions are separated into several groups. The short description of each f
 \hline
 \inlinecode{checkIfPositionIsReachedCoord (uint8_t i, float* robotCoordBuf)} & Subfunction for previous function.\\
 \hline
-\end{longtable} 
+\end{longtable}
 
-Apart from the functions mentioned in the table \ref{tab:functions_for_movement} there are some supplementary funtions for matrix calculations (see \textitbf{Matrix.c}, \textitbf{Matrix.h}, angle normalization (see \inlinecode{static void normalizeAngle(float* angle)} of \textitbf{Robot.h})) and other trivial procedures.
+An implementation of the particular function should be clear from the source code. However, a short description of movement with acceleration should be provided. Firstly, this feature is implemented to provide short and precise displacements of the robot. Therefore robot's coordinate system is used as a reference. When a high level sends a command for a short displacements, the firmware calls the function \inlinecode{void startMovementRobotCs1(float* distance, float* speedAbs, float accelerationAbs[3])}. Arguments of the function are distances (\textitbf{x, y, angle}), absolute speeds that robot should reach after acceleration and absolute values of accelerations. Inside the function \inlinecode{void startMovementRobotCs1(...)} the following sequence of steps are implemented:
+\begin{enumerate}
+\item \textitbf{Normalization of absolute speeds}
+
+(Absolute speeds are converted into motors' speeds and scaled if the values exceed maximum speed);
+\item \textitbf{Normalization of accelerations}
+
+(Absolute accelerations are scaled to make the time of acceleration and deceleration for all coordinates equal. It is necessary to keep the direction of movement constant during acceleration/deceleration);
+\item \textitbf{Filling of the struct for odometry movement with necessary parameters}
+
+(This step resets the coordinates in robot's system to zero, assign right signs for speed and acceleration, based on input distances. Moreover it optimizes the rotation based on input target angle, calculates speeds' increments, coordinates of points, where acceleration should stop and where deceleration should start).
+\end{enumerate}
+
+After the initialization in the interrupt handler of motor control timer firmware calls the function \inlinecode{checkIfPositionIsReached (void)} to check if the robot has already reached destinations point \textbf{OR} if it is time to start stable movement / deceleration \textbf{OR} if the timer is expired. Then the firmware calls \inlinecode{void speedRecalculation(void)} to recalculate speeds depending on the current step.
+
+
+Apart from the functions mentioned in the table \ref{tab:functions_for_movement} there are some supplementary funtions for matrix calculations (see \textitbf{Matrix.c}, \textitbf{Matrix.h}), angle normalization (see \inlinecode{static void normalizeAngle(float* angle)} of \textitbf{Robot.h})) and other trivial procedures.
 
 \subsection{Subsystem for task execution of servo manipulators}
 

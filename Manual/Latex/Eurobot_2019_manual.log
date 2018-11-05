@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.6.11)  4 NOV 2018 19:45
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (TeX Live 2018/W32TeX) (preloaded format=pdflatex 2018.6.11)  5 NOV 2018 21:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -713,6 +713,12 @@ LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <8> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 87.
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <6> not available
 (Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 87.
+LaTeX Font Info:    Try loading font information for T2A+cmtt on input line 92.
+
+
+(c:/texlive/2018/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
+File: t2acmtt.fd 2001/08/11 v1.0a Computer Modern Cyrillic font definitions
+)
 <images/scheme.pdf, id=14, 333.245pt x 375.4025pt>
 File: images/scheme.pdf Graphic file (type pdf)
 <use images/scheme.pdf>
@@ -722,12 +728,7 @@ Package pdftex.def Info: images/scheme.pdf  used on input line 108.
 
 pdfTeX warning: pdflatex.exe (file ./images/scheme.pdf): PDF inclusion: invalid
  other resource which is no dict (key 'ProcSets', type <array>); ignored.
->]
-LaTeX Font Info:    Try loading font information for T2A+cmtt on input line 122
-.
- (c:/texlive/2018/texmf-dist/tex/latex/cyrillic/t2acmtt.fd
-File: t2acmtt.fd 2001/08/11 v1.0a Computer Modern Cyrillic font definitions
-) [4] [5]
+>] [4] [5]
 Underfull \hbox (badness 10000) in paragraph at lines 197--197
 []|[][][][][][]
  []
@@ -792,21 +793,21 @@ Overfull \hbox (5.08578pt too wide) in alignment at lines 182--225
  [] [] 
  []
 
-[6]
-Overfull \hbox (1.71872pt too wide) in paragraph at lines 227--228
+[6] [7]
+Overfull \hbox (1.71872pt too wide) in paragraph at lines 243--244
 \T2A/cmr/m/n/12 nor-mal-iza-tion (see [][][][][][][][][][][][][][][][][][][][][
 ][] of \T2A/cmr/bx/it/12 Robot.h\T2A/cmr/m/n/12 ))
  []
 
-[7] (./Eurobot_2019_manual.aux) ) 
+[8] (./Eurobot_2019_manual.aux) ) 
 Here is how much of TeX's memory you used:
- 7561 strings out of 492646
- 103626 string characters out of 6133325
+ 7567 strings out of 492646
+ 103771 string characters out of 6133325
  207365 words of memory out of 5000000
- 11184 multiletter control sequences out of 15000+600000
- 25284 words of font info for 66 fonts, out of 8000000 for 9000
+ 11192 multiletter control sequences out of 15000+600000
+ 24414 words of font info for 65 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,9n,49p,1114b,1180s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 41i,9n,49p,1123b,1180s stack positions out of 5000i,500n,10000p,200000b,80000s
 {c:/texlive/2018/texmf-dist/fonts/enc/dvips/cm
 -super/cm-super-t2a.enc}<c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmmi12.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8
@@ -818,12 +819,11 @@ type1/public/cm-super/sfbx1440.pfb><c:/texlive/2018/texmf-dist/fonts/type1/publ
 ic/cm-super/sfbx1728.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-supe
 r/sfrm1200.pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfrm1440
 .pfb><c:/texlive/2018/texmf-dist/fonts/type1/public/cm-super/sfrm2074.pfb><c:/t
-exlive/2018/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb><c:/texlive/201
-8/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
-Output written on Eurobot_2019_manual.pdf (7 pages, 292399 bytes).
+exlive/2018/texmf-dist/fonts/type1/public/cm-super/sftt1095.pfb>
+Output written on Eurobot_2019_manual.pdf (8 pages, 272841 bytes).
 PDF statistics:
- 106 PDF objects out of 1000 (max. 8388607)
- 71 compressed objects within 1 object stream
+ 105 PDF objects out of 1000 (max. 8388607)
+ 70 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
  26 words of extra memory for PDF output out of 10000 (max. 10000000)
 
