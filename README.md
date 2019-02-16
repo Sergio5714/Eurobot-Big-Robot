@@ -23,3 +23,7 @@ As a result the robotic team **reSET** of Skoltech won [Eurobot Russiа 2018 com
 
 
 Link to the Skoltech robotics team [reSET](https://space.skoltech.ru/student-activities/eurobot-competition/team-2019/).
+
+The team photo from Eurobot Russia 2018:
+
+![alt text](https://github.com/Sergio5714/eurobot-2018-big-robot/blob/master/images/Eurobot%20Russia.jpg)
